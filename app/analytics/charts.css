@@ -1,0 +1,41 @@
+/* Recharts Legend 淺色主題 */
+.recharts-legend-wrapper {
+    color: #1f2937 !important;
+}
+
+.recharts-legend-item-text {
+    color: #1f2937 !important;
+    font-size: 14px !important;
+}
+
+.recharts-default-legend {
+    color: #1f2937 !important;
+}
+
+.recharts-legend-item {
+    color: #1f2937 !important;
+}
+
+/* Recharts Tooltip 淺色主題 */
+.recharts-tooltip-wrapper {
+    outline: none !important;
+}
+
+.recharts-default-tooltip {
+    background-color: #ffffff !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 8px !important;
+    color: #1f2937 !important;
+}
+
+.recharts-tooltip-label {
+    color: #1f2937 !important;
+}
+
+.recharts-tooltip-item {
+    color: #1f2937 !important;
+}
+
+.recharts-tooltip-item-list {
+    color: #1f2937 !important;
+}
