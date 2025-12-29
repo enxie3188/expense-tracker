@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
 
-export default function AuthCallbackPage() {
+function AuthCallbackContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const [status, setStatus] = useState('驗證中...');
@@ -55,29 +55,50 @@ export default function AuthCallbackPage() {
     }, [searchParams, router]);
 
     return (
-        <div className="min-h-screen bg-[var(--bg-primary)] flex items-center justify-center">
-            <div className="text-center p-8 rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)] max-w-md">
-                <div className="mb-4">
-                    {!error ? (
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--neon-blue)] mx-auto"></div>
-                    ) : (
-                        <div className="text-4xl">❌</div>
-                    )}
-                </div>
-                <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-2">
-                    {status}
-                </h2>
-                {error && (
-                    <p className="text-[var(--text-secondary)] text-sm">
-                        {error}
-                    </p>
-                )}
-                {error && (
-                    <p className="text-[var(--text-muted)] text-xs mt-4">
-                        3 秒後將返回登入頁面...
-                    </p>
+        <div className="text-center p-8 rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)] max-w-md">
+            <div className="mb-4">
+                {!error ? (
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--neon-blue)] mx-auto"></div>
+                ) : (
+                    <div className="text-4xl">❌</div>
                 )}
             </div>
+            <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-2">
+                {status}
+            </h2>
+            {error && (
+                <p className="text-[var(--text-secondary)] text-sm">
+                    {error}
+                </p>
+            )}
+            {error && (
+                <p className="text-[var(--text-muted)] text-xs mt-4">
+                    3 秒後將返回登入頁面...
+                </p>
+            )}
+        </div>
+    );
+}
+
+function LoadingFallback() {
+    return (
+        <div className="text-center p-8 rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)] max-w-md">
+            <div className="mb-4">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--neon-blue)] mx-auto"></div>
+            </div>
+            <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-2">
+                載入中...
+            </h2>
+        </div>
+    );
+}
+
+export default function AuthCallbackPage() {
+    return (
+        <div className="min-h-screen bg-[var(--bg-primary)] flex items-center justify-center">
+            <Suspense fallback={<LoadingFallback />}>
+                <AuthCallbackContent />
+            </Suspense>
         </div>
     );
 }
