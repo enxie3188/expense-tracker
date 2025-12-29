@@ -17,10 +17,10 @@ export const AlphaLogLogo = ({ className = "w-8 h-8" }: { className?: string }) 
                 stroke="#06B6D4"
                 strokeWidth="7"
                 strokeLinecap="round"
-                strokeJoin="round"
+                strokeLinejoin="round"
             />
             {/* 箭頭尖端 */}
-            <path d="M65 5H85V25" stroke="#06B6D4" strokeWidth="7" strokeLinecap="round" strokeJoin="round" />
+            <path d="M65 5H85V25" stroke="#06B6D4" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
     );
 };
