@@ -125,10 +125,21 @@ export function useFinance(): UseFinanceReturn {
                         console.log('Auto-migrating local data to cloud...');
 
                         try {
-                            // 遷移帳本
+                            // 去重：只遷移唯一名稱的帳本
                             const ledgerIdMap = new Map<string, string>();
+                            const uniqueLedgers = new Map<string, Ledger>();
+
                             if (localData.ledgers && localData.ledgers.length > 0) {
+                                // 只保留每個名稱的第一個帳本
                                 for (const ledger of localData.ledgers) {
+                                    if (!uniqueLedgers.has(ledger.name)) {
+                                        uniqueLedgers.set(ledger.name, ledger);
+                                    }
+                                }
+
+                                console.log(`Migrating ${uniqueLedgers.size} unique ledgers (deduped from ${localData.ledgers.length})`);
+
+                                for (const [, ledger] of uniqueLedgers) {
                                     const newLedger = await supabaseService.createLedger({
                                         name: ledger.name,
                                         assetType: ledger.assetType,
@@ -137,6 +148,13 @@ export function useFinance(): UseFinanceReturn {
                                         color: ledger.color,
                                     }, user.id);
                                     ledgerIdMap.set(ledger.id, newLedger.id);
+
+                                    // 將所有同名帳本的 ID 都映射到新的帳本 ID
+                                    for (const origLedger of localData.ledgers) {
+                                        if (origLedger.name === ledger.name) {
+                                            ledgerIdMap.set(origLedger.id, newLedger.id);
+                                        }
+                                    }
                                 }
                             }
 
