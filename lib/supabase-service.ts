@@ -21,7 +21,7 @@ export async function fetchLedgers(): Promise<Ledger[]> {
         name: row.name,
         assetType: row.asset_type,
         initialBalance: parseFloat(row.initial_balance) || 0,
-        icon: row.icon || '📊',
+        icon: '📊', // DB doesn't have icon column, use default
         color: row.color,
         createdAt: row.created_at,
     }));
@@ -35,7 +35,7 @@ export async function createLedger(ledger: Omit<Ledger, 'id' | 'createdAt'>, use
             name: ledger.name,
             asset_type: ledger.assetType,
             initial_balance: ledger.initialBalance,
-            icon: ledger.icon || '📊',
+            // icon field removed - DB doesn't have this column
             color: ledger.color,
         })
         .select()
@@ -48,7 +48,7 @@ export async function createLedger(ledger: Omit<Ledger, 'id' | 'createdAt'>, use
         name: data.name,
         assetType: data.asset_type,
         initialBalance: parseFloat(data.initial_balance) || 0,
-        icon: data.icon || '📊',
+        icon: '📊', // DB doesn't have icon column
         color: data.color,
         createdAt: data.created_at,
     };
@@ -61,7 +61,7 @@ export async function updateLedger(id: string, updates: Partial<Ledger>): Promis
             name: updates.name,
             asset_type: updates.assetType,
             initial_balance: updates.initialBalance,
-            icon: updates.icon,
+            // icon removed - DB doesn't have this column
             color: updates.color,
         })
         .eq('id', id);

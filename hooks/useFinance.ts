@@ -120,16 +120,88 @@ export function useFinance(): UseFinanceReturn {
                     const cloudIsEmpty = cloudLedgers.length === 0 && cloudTransactions.length === 0;
                     const localHasData = (localData.ledgers?.length || 0) > 0 || localData.transactions.length > 0;
 
-                    if (cloudIsEmpty && localHasData) {
-                        // 需要遷移：暫時顯示本地資料
-                        setTransactions(localData.transactions);
-                        setLedgers(localData.ledgers || []);
-                        setStrategies(localData.strategies || []);
-                        setCategories(localData.categories || []);
-                        if (localData.ledgers && localData.ledgers.length > 0) {
-                            setCurrentLedgerId(localData.ledgers[0].id);
+                    if (cloudIsEmpty && localHasData && user) {
+                        // 自動遷移本地資料到雲端
+                        console.log('Auto-migrating local data to cloud...');
+
+                        try {
+                            // 遷移帳本
+                            const ledgerIdMap = new Map<string, string>();
+                            if (localData.ledgers && localData.ledgers.length > 0) {
+                                for (const ledger of localData.ledgers) {
+                                    const newLedger = await supabaseService.createLedger({
+                                        name: ledger.name,
+                                        assetType: ledger.assetType,
+                                        initialBalance: ledger.initialBalance || 0,
+                                        icon: ledger.icon || '📊',
+                                        color: ledger.color,
+                                    }, user.id);
+                                    ledgerIdMap.set(ledger.id, newLedger.id);
+                                }
+                            }
+
+                            // 遷移策略
+                            const strategyIdMap = new Map<string, string>();
+                            if (localData.strategies && localData.strategies.length > 0) {
+                                for (const strategy of localData.strategies) {
+                                    const newStrategy = await supabaseService.createStrategy({
+                                        name: strategy.name,
+                                        description: strategy.description,
+                                        color: strategy.color,
+                                    }, user.id);
+                                    strategyIdMap.set(strategy.id, newStrategy.id);
+                                }
+                            }
+
+                            // 遷移交易記錄
+                            if (localData.transactions.length > 0) {
+                                await supabaseService.batchCreateTransactions(
+                                    localData.transactions,
+                                    user.id,
+                                    ledgerIdMap
+                                );
+                            }
+
+                            // 重新從雲端載入
+                            const [newLedgers, newStrategies, newTransactions] = await Promise.all([
+                                supabaseService.fetchLedgers(),
+                                supabaseService.fetchStrategies(),
+                                supabaseService.fetchTransactions(),
+                            ]);
+
+                            setLedgers(newLedgers);
+                            setStrategies(newStrategies);
+                            setTransactions(newTransactions);
+                            setCategories(localData.categories || []);
+
+                            if (newLedgers.length > 0) {
+                                setCurrentLedgerId(newLedgers[0].id);
+                            }
+
+                            console.log('Auto-migration completed!');
+                            setSyncStatus(prev => ({
+                                ...prev,
+                                isSyncing: false,
+                                lastSyncedAt: new Date(),
+                                migrationNeeded: false,
+                            }));
+                        } catch (migrationError) {
+                            console.error('Auto-migration failed:', migrationError);
+                            // 回退到顯示本地資料
+                            setTransactions(localData.transactions);
+                            setLedgers(localData.ledgers || []);
+                            setStrategies(localData.strategies || []);
+                            setCategories(localData.categories || []);
+                            if (localData.ledgers && localData.ledgers.length > 0) {
+                                setCurrentLedgerId(localData.ledgers[0].id);
+                            }
+                            setSyncStatus(prev => ({
+                                ...prev,
+                                migrationNeeded: true,
+                                isSyncing: false,
+                                error: 'Auto-migration failed. Please try manual migration.'
+                            }));
                         }
-                        setSyncStatus(prev => ({ ...prev, migrationNeeded: true, isSyncing: false }));
                     } else {
                         // 使用雲端資料
                         setTransactions(cloudTransactions);
