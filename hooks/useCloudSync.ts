@@ -369,6 +369,7 @@ export function useCloudSync(): CloudSyncReturn {
                         name: ledger.name,
                         assetType: ledger.assetType,
                         initialBalance: ledger.initialBalance,
+                        icon: ledger.icon || '📊',
                         color: ledger.color,
                     }, user.id);
                     ledgerIdMap.set(ledger.id, newLedger.id);
