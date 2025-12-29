@@ -21,6 +21,7 @@ export async function fetchLedgers(): Promise<Ledger[]> {
         name: row.name,
         assetType: row.asset_type,
         initialBalance: parseFloat(row.initial_balance) || 0,
+        icon: row.icon || '📊',
         color: row.color,
         createdAt: row.created_at,
     }));
@@ -34,6 +35,7 @@ export async function createLedger(ledger: Omit<Ledger, 'id' | 'createdAt'>, use
             name: ledger.name,
             asset_type: ledger.assetType,
             initial_balance: ledger.initialBalance,
+            icon: ledger.icon || '📊',
             color: ledger.color,
         })
         .select()
@@ -46,6 +48,7 @@ export async function createLedger(ledger: Omit<Ledger, 'id' | 'createdAt'>, use
         name: data.name,
         assetType: data.asset_type,
         initialBalance: parseFloat(data.initial_balance) || 0,
+        icon: data.icon || '📊',
         color: data.color,
         createdAt: data.created_at,
     };
@@ -58,6 +61,7 @@ export async function updateLedger(id: string, updates: Partial<Ledger>): Promis
             name: updates.name,
             asset_type: updates.assetType,
             initial_balance: updates.initialBalance,
+            icon: updates.icon,
             color: updates.color,
         })
         .eq('id', id);
@@ -160,7 +164,8 @@ export async function createTransaction(
     userId: string,
     ledgerId: string
 ): Promise<Transaction> {
-    const tradingTx = tx as TradingTransaction;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const tradingTx = tx as unknown as any;
 
     const { data, error } = await supabase
         .from('transactions')
@@ -176,7 +181,7 @@ export async function createTransaction(
             quantity: tradingTx.quantity,
             amount: tx.amount,
             pnl: tradingTx.pnl,
-            pnl_rate: tradingTx.pnlRate,
+            pnl_rate: tradingTx.pnlRate || null,
             commission: tradingTx.commission,
             date: tx.date,
             note: tx.note,
@@ -191,7 +196,8 @@ export async function createTransaction(
 }
 
 export async function updateTransaction(id: string, updates: Partial<Transaction>): Promise<void> {
-    const tradingUpdates = updates as Partial<TradingTransaction>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const tradingUpdates = updates as unknown as any;
 
     const { error } = await supabase
         .from('transactions')
@@ -204,7 +210,7 @@ export async function updateTransaction(id: string, updates: Partial<Transaction
             quantity: tradingUpdates.quantity,
             amount: updates.amount,
             pnl: tradingUpdates.pnl,
-            pnl_rate: tradingUpdates.pnlRate,
+            pnl_rate: tradingUpdates.pnlRate || null,
             commission: tradingUpdates.commission,
             date: updates.date,
             note: updates.note,
@@ -229,11 +235,13 @@ export async function deleteTransaction(id: string): Promise<void> {
 // HELPERS
 // ============================================
 
-function mapRowToTransaction(row: Record<string, unknown>): Transaction {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapRowToTransaction(row: Record<string, unknown>): any {
     const base = {
         id: row.id as string,
         type: row.type as 'income' | 'expense' | 'long' | 'short',
         amount: parseFloat(row.amount as string) || 0,
+        category: '',
         date: row.date as string,
         note: row.note as string,
         createdAt: row.created_at as string,
@@ -247,6 +255,7 @@ function mapRowToTransaction(row: Record<string, unknown>): Transaction {
             strategyId: row.strategy_id as string | undefined,
             ticker: row.ticker as string,
             symbol: row.symbol as string,
+            direction: row.type as 'long' | 'short',
             entryPrice: parseFloat(row.entry_price as string) || 0,
             exitPrice: parseFloat(row.exit_price as string) || 0,
             quantity: parseFloat(row.quantity as string) || 0,
@@ -254,7 +263,7 @@ function mapRowToTransaction(row: Record<string, unknown>): Transaction {
             pnlRate: parseFloat(row.pnl_rate as string) || 0,
             commission: parseFloat(row.commission as string) || 0,
             images: (row.images as string[]) || [],
-        } as TradingTransaction;
+        };
     }
 
     return base;
@@ -297,7 +306,8 @@ export async function batchCreateTransactions(
     ledgerIdMap: Map<string, string> // Maps old ledger IDs to new ones
 ): Promise<void> {
     const rows = transactions.map(tx => {
-        const tradingTx = tx as TradingTransaction;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const tradingTx = tx as unknown as any;
         return {
             user_id: userId,
             ledger_id: ledgerIdMap.get(tradingTx.ledgerId || '') || null,
@@ -310,7 +320,7 @@ export async function batchCreateTransactions(
             quantity: tradingTx.quantity,
             amount: tx.amount,
             pnl: tradingTx.pnl,
-            pnl_rate: tradingTx.pnlRate,
+            pnl_rate: tradingTx.pnlRate || null,
             commission: tradingTx.commission,
             date: tx.date,
             note: tx.note,
