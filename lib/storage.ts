@@ -18,7 +18,7 @@ const DEFAULT_DATA: AppData = {
         id: `default-${index}`,
     })),
     ledgers: [
-        createLedger('我的帳本', 'other', 'NT$', 'Wallet', 'blue'),
+        createLedger('我的帳本', 'other', 0, '📊', '#3B82F6'),
     ],
     strategies: [],
     settings: {
@@ -71,7 +71,7 @@ function migrateData(data: Partial<AppData>): AppData {
         console.log('Migrating old data format to new schema...');
 
         // 建立預設帳本
-        const defaultLedger = createLedger('我的帳本', 'other', 'NT$', 'Wallet', 'blue');
+        const defaultLedger = createLedger('我的帳本', 'other', 0, '📊', '#3B82F6');
 
         // 將所有舊交易歸屬至預設帳本
         const migratedTransactions = (data.transactions || []).map((tx) => ({
