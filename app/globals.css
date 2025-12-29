@@ -129,3 +129,12 @@ body {
   background-color: var(--neon-blue) !important;
   color: white !important;
 }
+
+/* Mobile Safe Area Utilities */
+.safe-area-pb {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.safe-area-pt {
+  padding-top: env(safe-area-inset-top);
+}
