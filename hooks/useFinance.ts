@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Transaction, Category, FinancialStats } from '@/types';
 import { Ledger, Strategy, TradingTransaction } from '@/types/ledger';
-import { loadFromStorage, saveToStorage } from '@/lib/storage';
+import { loadFromStorage, saveToStorage, clearStorage } from '@/lib/storage';
 import { calculateStats } from '@/lib/calculations';
 import { useAuth } from '@/contexts/AuthContext';
 import * as supabaseService from '@/lib/supabase-service';
@@ -179,6 +179,11 @@ export function useFinance(): UseFinanceReturn {
                             }
 
                             console.log('Auto-migration completed!');
+
+                            // 清除本地資料，防止重複遷移
+                            clearStorage();
+                            console.log('Local storage cleared after migration.');
+
                             setSyncStatus(prev => ({
                                 ...prev,
                                 isSyncing: false,
