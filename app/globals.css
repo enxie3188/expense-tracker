@@ -1,21 +1,131 @@
 @import "tailwindcss";
+@variant dark (&:where(.dark, .dark *));
+@import "react-datepicker/dist/react-datepicker.css";
 
+/* 深色主題配色 - AlphaLog Cyber Style */
 :root {
-  --background: #f5f5f5;
-  --foreground: #1a1a1a;
-  --card-bg: #ffffff;
-  --border-color: #e5e7eb;
+  /* AlphaLog Cyber Palette */
+  --bg-primary: #0B1120;
+  /* brand-dark */
+  --bg-secondary: #111827;
+  /* brand-card */
+  --bg-card: #111827;
+  /* brand-card */
+  --bg-hover: #1E293B;
+  /* Slightly lighter than card */
+
+  /* Text Colors */
+  --text-primary: #F8FAFC;
+  /* Slate-50 */
+  --text-secondary: #94A3B8;
+  /* Slate-400 (brand-muted) */
+  --text-muted: #64748B;
+  /* Slate-500 */
+
+  /* Borders */
+  --border-subtle: #1E293B;
+  /* Slate-800 */
+  --border-default: #334155;
+  /* Slate-700 */
+
+  /* 霓虹色（發光效果） */
+  --neon-green: #10B981;
+  --neon-green-glow: rgba(16, 185, 129, 0.3);
+  --neon-pink: #F43F5E;
+  --neon-pink-glow: rgba(244, 63, 94, 0.3);
+  --neon-blue: #06B6D4;
+  --neon-blue-glow: rgba(6, 182, 212, 0.3);
+  --neon-purple: #8b5cf6;
+  --neon-orange: #f59e0b;
+
+  /* 漸層 */
+  --gradient-profit: linear-gradient(135deg, #10B981 0%, #059669 100%);
+  --gradient-loss: linear-gradient(135deg, #F43F5E 0%, #E11D48 100%);
+}
+
+/* Light Mode (Optional - for future use) */
+.light-mode {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f3f4f6;
+  --bg-card: #f3f4f6;
+  --bg-hover: #e5e7eb;
+  --text-primary: #111827;
+  --text-secondary: #4b5563;
+  --text-muted: #9ca3af;
+  --border-subtle: #e5e7eb;
+  --border-default: #d1d5db;
+}
+
+/* Font Size Scaling */
+:root[data-font-size="small"] {
+  font-size: 14px;
+}
+
+:root[data-font-size="medium"] {
+  font-size: 16px;
+}
+
+:root[data-font-size="large"] {
+  font-size: 18px;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-background: var(--bg-primary);
+  --color-foreground: var(--text-primary);
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-jetbrains-mono);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-inter);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Numbers in monospace */
+.font-mono {
+  font-family: var(--font-jetbrains-mono) !important;
+}
+
+/* ... existing utilities ... */
+.glow-green {
+  box-shadow: 0 0 20px var(--neon-green-glow), 0 0 40px var(--neon-green-glow);
+}
+
+.glow-pink {
+  box-shadow: 0 0 20px var(--neon-pink-glow), 0 0 40px var(--neon-pink-glow);
+}
+
+.glow-blue {
+  box-shadow: 0 0 20px var(--neon-blue-glow), 0 0 40px var(--neon-blue-glow);
+}
+
+.card-dark {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+}
+
+/* React Datepicker Customization for new dark theme */
+.react-datepicker {
+  background-color: var(--bg-card) !important;
+  border-color: var(--border-subtle) !important;
+  color: var(--text-primary) !important;
+}
+
+.react-datepicker__header {
+  background-color: var(--bg-hover) !important;
+  border-bottom-color: var(--border-subtle) !important;
+}
+
+.react-datepicker__day:hover {
+  background-color: var(--border-default) !important;
+}
+
+.react-datepicker__day--selected {
+  background-color: var(--neon-blue) !important;
+  color: white !important;
 }

@@ -1,297 +1,504 @@
 'use client';
 
+import { TransactionDetailModal } from '@/components/TransactionDetailModal';
 import { useFinance } from '@/hooks/useFinance';
-import { formatAmount, calculateStats } from '@/lib/calculations';
-import { useState, useMemo, useEffect } from 'react';
-import { Plus, TrendingUp, TrendingDown } from 'lucide-react';
-import { Modal } from '@/components/ui/Modal';
-import * as LucideIcons from 'lucide-react';
-import DatePicker from 'react-datepicker';
-import 'react-datepicker/dist/react-datepicker.css';
-import './datepicker.css';
-import { MonthPicker } from '@/components/MonthPicker';
-import { getTransactionsByMonth } from '@/lib/analytics';
-import { groupTransactionsByDate } from '@/lib/dateUtils';
-import { DateGroup } from '@/components/DateGroup';
+import { useTranslation } from '@/hooks/useTranslation';
+import { useMemo, useState, forwardRef } from 'react';
+import { TrendingUp, TrendingDown, Calendar, Trash2, ChevronDown, Plus, Pencil, ImageIcon } from 'lucide-react';
+import { format, isSameMonth } from 'date-fns';
+import { zhTW, enUS } from 'date-fns/locale';
+import { TradingForm } from '@/components/TradingForm';
+import { usePathname } from 'next/navigation';
+import { ConfirmModal } from '@/components/ConfirmModal';
+import { useSettings } from '@/hooks/useSettings';
+import { SwipeableCard } from '@/components/SwipeableCard';
+import { Transaction, TradingTransaction } from '@/types';
+import DatePicker, { registerLocale } from 'react-datepicker';
+import "react-datepicker/dist/react-datepicker.css";
 
-export default function Home() {
-  const {
-    transactions,
-    categories,
-    addTransaction,
-    deleteTransaction,
-    isLoading,
-  } = useFinance();
+registerLocale('zh-TW', zhTW);
+registerLocale('en-US', enUS);
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [amount, setAmount] = useState('');
-  const [note, setNote] = useState('');
-  const [type, setType] = useState<'income' | 'expense'>('expense');
-  const [selectedCategory, setSelectedCategory] = useState('');
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+const DateSelectButton = forwardRef<HTMLButtonElement, any>(({ value, onClick }, ref) => (
+  <button
+    className="flex items-center gap-2 text-lg font-bold text-[var(--text-primary)] hover:bg-[var(--bg-hover)] px-3 py-1 rounded-lg transition-colors cursor-pointer"
+    onClick={onClick}
+    ref={ref}
+  >
+    {value}
+    <ChevronDown size={20} className="text-[var(--text-secondary)]" />
+  </button>
+));
+DateSelectButton.displayName = 'DateSelectButton';
+
+export default function TransactionsPage() {
+  const { settings } = useSettings();
+  const { t, lang } = useTranslation();
+  const { ledgers, transactions, strategies, deleteTransaction } = useFinance();
+  const [selectedLedgerId, setSelectedLedgerId] = useState<string>('all');
+  const [confirmDelete, setConfirmDelete] = useState<{ id: string; symbol: string } | null>(null);
+  const [expandedTxId, setExpandedTxId] = useState<string | null>(null);
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | TradingTransaction | null>(null);
+  const [viewingTransaction, setViewingTransaction] = useState<Transaction | TradingTransaction | null>(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState<Date>(new Date());
 
-  // 篩選當月交易
-  const monthlyTransactions = useMemo(() => {
-    const year = selectedMonth.getFullYear();
-    const month = selectedMonth.getMonth() + 1;
-    return getTransactionsByMonth(transactions, year, month);
-  }, [transactions, selectedMonth]);
+  // 篩選 (Ledger + Month)
+  const filteredTransactions = useMemo(() => {
+    let filtered = transactions;
 
-  // 計算當月統計
-  const monthlyStats = useMemo(() => {
-    return calculateStats(monthlyTransactions);
-  }, [monthlyTransactions]);
+    // Ledger Filter
+    if (selectedLedgerId !== 'all') {
+      filtered = filtered.filter((t) => t.ledgerId === selectedLedgerId);
+    }
 
-  // 按日期分組交易
-  const groupedTransactions = useMemo(() => {
-    const sorted = [...monthlyTransactions].sort(
+    // Date Filter
+    filtered = filtered.filter(t => isSameMonth(new Date(t.date), selectedMonth));
+
+    return filtered;
+  }, [transactions, selectedLedgerId, selectedMonth]);
+
+  // 按日期排序
+  const sortedTransactions = useMemo(() => {
+    return [...filteredTransactions].sort(
       (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
     );
-    const groups = groupTransactionsByDate(sorted);
-    return Array.from(groups.entries()).sort((a, b) => b[0].localeCompare(a[0]));
-  }, [monthlyTransactions]);
+  }, [filteredTransactions]);
 
-  // 根據類型篩選分類
-  const availableCategories = categories.filter(
-    (cat) => cat.type === type || cat.type === 'both'
-  );
+  const currentLedger = ledgers.find((l) => l.id === selectedLedgerId);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  // Group transactions by date
+  const groupedTransactions = useMemo(() => {
+    const groups: { dateKey: string; dateObj: Date; totalPnL: number; transactions: Transaction[] }[] = [];
 
-    const amountInCents = Math.round(parseFloat(amount) * 100);
+    sortedTransactions.forEach((tx) => {
+      const date = new Date(tx.date);
+      const dateKey = format(date, 'yyyy-MM-dd');
 
-    if (isNaN(amountInCents) || amountInCents <= 0) {
-      alert('請輸入有效金額');
-      return;
-    }
+      let lastGroup = groups[groups.length - 1];
+      if (!lastGroup || lastGroup.dateKey !== dateKey) {
+        lastGroup = {
+          dateKey,
+          dateObj: date,
+          totalPnL: 0,
+          transactions: [],
+        };
+        groups.push(lastGroup);
+      }
 
-    if (!selectedCategory) {
-      alert('請選擇分類');
-      return;
-    }
-
-    addTransaction({
-      type,
-      amount: amountInCents,
-      category: selectedCategory,
-      date: selectedDate.toISOString(),
-      note: note || undefined,
+      lastGroup.transactions.push(tx);
+      // Calculate Total PnL
+      if ('pnl' in tx && typeof (tx as any).pnl === 'number') {
+        lastGroup.totalPnL += (tx as any).pnl;
+      } else if ('amount' in tx && typeof (tx as any).amount === 'number') {
+        // Handle regular transactions (expense/income)
+        // Amount is in cents, convert to unit
+        const val = (tx as any).amount / 100;
+        lastGroup.totalPnL += (tx as any).type === 'expense' ? -val : val;
+      }
     });
 
-    // 重置表單
-    setAmount('');
-    setNote('');
-    setSelectedCategory('');
-    setSelectedDate(new Date());
-    setIsModalOpen(false);
+    return groups;
+  }, [sortedTransactions]);
+
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
+
+  const toggleGroup = (dateKey: string) => {
+    const newSet = new Set(collapsedGroups);
+    if (newSet.has(dateKey)) {
+      newSet.delete(dateKey);
+    } else {
+      newSet.add(dateKey);
+    }
+    setCollapsedGroups(newSet);
   };
 
-  // 當類型改變時，重置分類選擇
-  const handleTypeChange = (newType: 'income' | 'expense') => {
-    setType(newType);
-    setSelectedCategory('');
+  // 格式化日期時間使用用戶設定
+  const formatDateTime = (dateString: string) => {
+    const date = new Date(dateString);
+    const datePattern = settings.appearance.dateFormat.replace('yyyy', 'y').replace('MM', 'M').replace('dd', 'd');
+    const timePattern = settings.appearance.timeFormat === '12h' ? 'hh:mm a' : 'HH:mm';
+    return format(date, `${datePattern} ${timePattern}`, { locale: lang === 'zh-TW' ? zhTW : enUS });
   };
 
-  // 渲染分類圖標
-  const CategoryIcon = ({ iconName, className }: { iconName: string; className?: string }) => {
-    const Icon = (LucideIcons as any)[iconName];
-    if (!Icon) return null;
-    return <Icon size={16} className={className} />;
+  const handleDelete = (id: string, symbol: string) => {
+    setConfirmDelete({ id, symbol });
   };
-
-  // 監聽來自 Navigation 的新增事件
-  useEffect(() => {
-    const handleOpenModal = () => setIsModalOpen(true);
-    window.addEventListener('openAddModal', handleOpenModal);
-    return () => window.removeEventListener('openAddModal', handleOpenModal);
-  }, []);
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-lg text-gray-600">載入中...</div>
-      </div>
-    );
-  }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* 主要內容 */}
-      <div className="max-w-2xl mx-auto px-4 py-6 pb-24">
-        {/* 月份選擇器 */}
-        <MonthPicker selectedDate={selectedMonth} onChange={setSelectedMonth} />
+    <div className="min-h-screen bg-[var(--bg-primary)] pb-24 lg:pb-8 w-full">
+      <div className="px-4 lg:px-8 py-8 pt-16 lg:pt-8 max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="mb-6 relative">
+          <h1 className="text-3xl font-bold mb-2">{t.transactions.title}</h1>
+          <p className="text-[var(--text-secondary)] text-sm">
+            {t.transactions.viewHistory}
+          </p>
 
-        {/* 統計卡片 */}
-        <div className="bg-white rounded-2xl shadow-sm p-6 mb-4">
-          <div className="text-sm text-gray-500 mb-2">當月餘額</div>
-          <div className={`text-4xl font-bold mb-6 ${monthlyStats.balance >= 0 ? 'text-gray-900' : 'text-red-600'
-            }`}>
-            {formatAmount(monthlyStats.balance).replace('NT$', '$')}
-          </div>
+          {/* Add Transaction Button - Desktop Only */}
+          <button
+            onClick={() => {
+              // Scroll to top and trigger add - need to pass through layout
+              window.dispatchEvent(new CustomEvent('openAddTransaction'));
+            }}
+            className="hidden lg:flex absolute top-0 right-0 items-center gap-2 px-4 py-2 bg-[var(--neon-blue)] hover:bg-[var(--neon-blue)]/80 text-white rounded-lg transition-colors shadow-lg"
+          >
+            <Plus size={20} />
+            {t.common.add}
+          </button>
+        </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <TrendingUp size={16} className="text-green-600" />
-                <span className="text-xs text-gray-500">收入</span>
-              </div>
-              <div className="text-lg font-semibold text-green-600">
-                {formatAmount(monthlyStats.totalIncome).replace('NT$', '$')}
-              </div>
-            </div>
-
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <TrendingDown size={16} className="text-red-600" />
-                <span className="text-xs text-gray-500">支出</span>
-              </div>
-              <div className="text-lg font-semibold text-red-600">
-                {formatAmount(monthlyStats.totalExpense).replace('NT$', '-$')}
-              </div>
-            </div>
+        {/* Ledger Tabs */}
+        <div className="mb-6 border-b border-[var(--border-default)]">
+          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+            <button
+              onClick={() => setSelectedLedgerId('all')}
+              className={`px-4 py-2 rounded-t-lg text-sm font-medium transition-colors whitespace-nowrap ${selectedLedgerId === 'all'
+                ? 'bg-[var(--neon-blue)] text-white'
+                : 'text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]'
+                }`}
+            >
+              {t.analytics.allLedgers}
+            </button>
+            {ledgers.map((ledger) => (
+              <button
+                key={ledger.id}
+                onClick={() => setSelectedLedgerId(ledger.id)}
+                className={`px-4 py-2 rounded-t-lg text-sm font-medium transition-colors whitespace-nowrap flex items-center gap-2 ${selectedLedgerId === ledger.id
+                  ? 'bg-[var(--neon-blue)] text-white'
+                  : 'text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]'
+                  }`}
+              >
+                <div
+                  className="w-2 h-2 rounded-full"
+                  style={{ backgroundColor: ledger.color }}
+                />
+                {ledger.name}
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* 交易列表 */}
-        <div>
-          {groupedTransactions.length === 0 ? (
-            <div className="text-center py-20">
-              <div className="text-gray-600 mb-2">尚無交易記錄</div>
-              <div className="text-sm text-gray-400">點擊底部的 + 按鈕新增第一筆交易</div>
+        {/* Transaction Count & Date Filter */}
+        <div className="mb-4 flex items-center justify-between relative">
+          <p className="text-[var(--text-secondary)] text-sm">
+            <span className="hidden md:inline">
+              {currentLedger && selectedLedgerId !== 'all' ? `${currentLedger.name} • ` : ''}
+            </span>
+            {sortedTransactions.length} {t.transactions.countSuffix}
+          </p>
+
+          <div className="absolute left-1/2 -translate-x-1/2 z-20">
+            <DatePicker
+              selected={selectedMonth}
+              onChange={(date: Date | null) => date && setSelectedMonth(date)}
+              dateFormat="yyyy/MM"
+              showMonthYearPicker
+              locale={lang === 'zh-TW' ? 'zh-TW' : 'en-US'}
+              customInput={<DateSelectButton />}
+              calendarClassName="month-grid-fix"
+            />
+          </div>
+        </div>
+
+        {/* Transactions List */}
+        <div className="space-y-3">
+          {sortedTransactions.length === 0 ? (
+            <div className="card-dark p-12 text-center">
+              <p className="text-[var(--text-muted)] mb-4">{t.common.noData}</p>
+              <p className="text-sm text-[var(--text-secondary)]">
+                <span className="lg:hidden">{t.transactions.clickAdd}</span>
+                <span className="hidden lg:inline">{t.transactions.clickAddDesktop}</span>
+              </p>
             </div>
           ) : (
-            <div>
-              {groupedTransactions.map(([date, trans]) => (
-                <DateGroup
-                  key={date}
-                  date={date}
-                  transactions={trans}
-                  categories={categories}
-                  onDelete={deleteTransaction}
-                />
-              ))}
-            </div>
+            groupedTransactions.map((group) => {
+              const isCollapsed = collapsedGroups.has(group.dateKey);
+              const dateDisplay = format(group.dateObj, 'MM/dd (eee)', { locale: lang === 'zh-TW' ? zhTW : enUS });
+
+              return (
+                <div key={group.dateKey} className="mb-6">
+                  {/* Group Header */}
+                  <div
+                    className="flex items-center justify-between px-3 py-2 bg-[var(--bg-secondary)] rounded-lg cursor-pointer mb-2 select-none hover:bg-[var(--bg-hover)] transition-colors"
+                    onClick={() => toggleGroup(group.dateKey)}
+                  >
+                    <div className="flex items-center gap-2">
+                      <ChevronDown
+                        size={16}
+                        className={`text-[var(--text-secondary)] transition-transform duration-200 ${isCollapsed ? '-rotate-90' : ''
+                          }`}
+                      />
+                      <span className="font-medium text-[var(--text-secondary)]">{dateDisplay}</span>
+                    </div>
+                    <span
+                      className={`font-semibold ${group.totalPnL > 0
+                        ? 'text-[var(--neon-green)]'
+                        : group.totalPnL < 0
+                          ? 'text-[var(--neon-pink)]'
+                          : 'text-[var(--text-secondary)]'
+                        }`}
+                    >
+                      {group.totalPnL > 0 ? '+' : ''}
+                      {group.totalPnL.toLocaleString()}
+                    </span>
+                  </div>
+
+                  {/* Transactions List */}
+                  {!isCollapsed && (
+                    <div className="space-y-3">
+                      {group.transactions.map((tx) => {
+                        // 判斷是舊格式還是新格式
+                        const isTrading = 'pnl' in tx && tx.pnl !== undefined;
+                        const strategy = strategies.find((s) =>
+                          'strategyId' in tx && s.id === (tx as any).strategyId
+                        );
+
+                        const isExpanded = expandedTxId === tx.id;
+
+                        return (
+                          <SwipeableCard
+                            key={tx.id}
+                            onDelete={() => handleDelete(tx.id, (tx as any).ticker || (tx as any).category || 'Unknown')}
+                          >
+                            <div className="card-dark transition-all relative group">
+                              {/* Main Card - Clickable */}
+                              <div
+                                className="p-5 cursor-pointer hover:bg-[var(--bg-hover)] transition-colors relative"
+                                onClick={() => {
+                                  // 手機版：點擊開啟詳情視窗 (Detail View)
+                                  if (window.innerWidth < 768) {
+                                    setViewingTransaction(tx);
+                                  } else {
+                                    // 桌面版：展開備註
+                                    setExpandedTxId(isExpanded ? null : tx.id);
+                                  }
+                                }}
+                              >
+                                <div className="flex items-start justify-between">
+                                  {/* Left: Info */}
+                                  <div className="flex-1">
+                                    {isTrading ? (
+                                      <>
+                                        {/* Trading Transaction */}
+                                        <div className="flex items-center gap-2 mb-2">
+                                          {(tx as any).type === 'long' ? (
+                                            <TrendingUp size={18} className="text-[var(--neon-green)]" />
+                                          ) : (
+                                            <TrendingDown size={18} className="text-[var(--neon-pink)]" />
+                                          )}
+                                          <span className="font-semibold text-lg">
+                                            {(tx as any).ticker || 'Unknown'}
+                                          </span>
+                                          <span className="text-xs px-2 py-1 rounded bg-[var(--bg-hover)] text-[var(--text-secondary)]">
+                                            {(tx as any).type === 'long' ? t.tradingForm.long : t.tradingForm.short}
+                                          </span>
+                                        </div>
+
+                                        <div className="text-sm text-[var(--text-secondary)] space-y-1">
+                                          <div>
+                                            {t.tradingForm.quantity}: {(tx as any).quantity} @{' '}
+                                            {(tx as any).entryPrice} → {(tx as any).exitPrice}
+                                          </div>
+                                          {strategy && (
+                                            <div className="flex items-center gap-1">
+                                              <div
+                                                className="w-2 h-2 rounded-full"
+                                                style={{ backgroundColor: strategy.color }}
+                                              />
+                                              <span>{strategy.name}</span>
+                                            </div>
+                                          )}
+                                        </div>
+                                      </>
+                                    ) : (
+                                      <>
+                                        {/* Old Transaction Format */}
+                                        <div className="font-semibold text-lg mb-1">
+                                          {(tx as any).category}
+                                        </div>
+                                      </>
+                                    )}
+
+                                    {/* Date with Expand Indicator */}
+                                    <div className="mt-2">
+                                      <div className="flex items-center gap-1 text-xs text-[var(--text-muted)]">
+                                        <Calendar size={12} />
+                                        {formatDateTime(tx.date)}
+                                      </div>
+                                      {(tx as any).images?.length > 0 && (
+                                        <div className="flex items-center gap-1 text-xs text-[var(--neon-blue)] mt-1">
+                                          <ImageIcon size={12} />
+                                          {(tx as any).images.length}
+                                        </div>
+                                      )}
+                                      {tx.note && (
+                                        <div className="hidden md:flex items-center justify-center mt-1">
+                                          <ChevronDown
+                                            size={14}
+                                            className={`text-[var(--text-muted)] transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                                          />
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+
+                                  {/* Right: Amount/PnL */}
+                                  <div className="text-right">
+                                    {isTrading ? (
+                                      <div
+                                        className={`text-2xl font-bold ${(tx as any).pnl >= 0
+                                          ? 'text-[var(--neon-green)]'
+                                          : 'text-[var(--neon-pink)]'
+                                          }`}
+                                      >
+                                        {(tx as any).pnl >= 0 ? '+' : ''}
+                                        {(tx as any).pnl?.toFixed(0)}
+                                      </div>
+                                    ) : (
+                                      <div
+                                        className={`text-2xl font-bold ${(tx as any).type === 'income'
+                                          ? 'text-[var(--neon-green)]'
+                                          : 'text-[var(--neon-pink)]'
+                                          }`}
+                                      >
+                                        {(tx as any).type === 'income' ? '+' : '-'}
+                                        {((tx as any).amount / 100).toFixed(0)}
+                                      </div>
+                                    )}
+
+                                    {isTrading && (tx as any).commission > 0 && (
+                                      <div className="text-xs text-[var(--text-muted)] mt-1">
+                                        {t.transactions.commission}: {(tx as any).commission}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+
+                                {/* Action Buttons - Bottom Right of main content (Desktop only) */}
+                                <div className="hidden lg:flex absolute bottom-3 right-3 gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setEditingTransaction(tx);
+                                    }}
+                                    className="p-2 rounded-lg bg-[var(--bg-hover)] hover:bg-[var(--neon-blue)]/20 text-[var(--text-muted)] hover:text-[var(--neon-blue)] transition-all"
+                                    title="編輯交易"
+                                  >
+                                    <Pencil size={16} />
+                                  </button>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDelete(tx.id, (tx as any).ticker || (tx as any).category || 'Unknown');
+                                    }}
+                                    className="p-2 rounded-lg bg-[var(--bg-hover)] hover:bg-red-500/20 text-[var(--text-muted)] hover:text-red-500 transition-all"
+                                    title="刪除交易"
+                                  >
+                                    <Trash2 size={16} />
+                                  </button>
+                                </div>
+                              </div>
+
+                              {/* Expanded Details */}
+                              {isExpanded && tx.note && (
+                                <div className="px-5 pb-5 border-t border-[var(--border-subtle)] pt-4 mt-2">
+                                  <h4 className="text-sm font-semibold text-[var(--text-secondary)] mb-2">
+                                    📝 備註
+                                  </h4>
+                                  <div className="text-sm text-[var(--text-primary)] whitespace-pre-wrap bg-[var(--bg-hover)] p-4 rounded-lg">
+                                    {tx.note}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Expanded Images */}
+                              {isExpanded && (tx as any).images?.length > 0 && (
+                                <div className="px-5 pb-5 border-t border-[var(--border-subtle)] pt-4 mt-2">
+                                  <h4 className="text-sm font-semibold text-[var(--text-secondary)] mb-2">
+                                    📷 附件
+                                  </h4>
+                                  <div className="flex flex-wrap gap-2">
+                                    {(tx as any).images.map((img: string, i: number) => (
+                                      <div key={i} className="relative w-24 h-24 rounded-lg overflow-hidden border border-[var(--border-default)] cursor-pointer hover:opacity-90">
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                        <img
+                                          src={img}
+                                          alt={`Attachment ${i}`}
+                                          className="w-full h-full object-cover"
+                                          onClick={() => {
+                                            const win = window.open();
+                                            if (win) {
+                                              win.document.write(`<img src="${img}" style="max-width:100%; height:auto;">`);
+                                            }
+                                          }}
+                                        />
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </SwipeableCard>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })
           )}
         </div>
       </div>
 
-      {/* 新增交易 Modal */}
-      <Modal
-        isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false);
-          setSelectedCategory('');
+      {/* Confirm Delete Modal */}
+      <ConfirmModal
+        isOpen={confirmDelete !== null}
+        title={t.transactions.deleteConfirmTitle}
+        message={t.transactions.deleteConfirmMessage.replace('{symbol}', confirmDelete?.symbol || '')}
+        onConfirm={() => {
+          if (confirmDelete) {
+            deleteTransaction(confirmDelete.id);
+            setConfirmDelete(null);
+          }
         }}
-        title="新增交易"
-      >
-        <form onSubmit={handleSubmit} className="space-y-5">
-          {/* 類型選擇 */}
-          <div className="flex gap-3">
-            <button
-              type="button"
-              onClick={() => handleTypeChange('expense')}
-              className={`flex-1 py-3 rounded-xl font-medium transition-all ${type === 'expense'
-                ? 'bg-red-500 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
-            >
-              支出
-            </button>
-            <button
-              type="button"
-              onClick={() => handleTypeChange('income')}
-              className={`flex-1 py-3 rounded-xl font-medium transition-all ${type === 'income'
-                ? 'bg-green-500 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
-            >
-              收入
-            </button>
-          </div>
+        onCancel={() => {
+          setConfirmDelete(null);
+        }}
+        confirmText={t.common.delete}
+        cancelText={t.common.cancel}
+      />
 
-          {/* 分類選擇 */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">
-              分類
-            </label>
-            <div className="grid grid-cols-3 gap-2">
-              {availableCategories.map((category) => (
-                <button
-                  key={category.id}
-                  type="button"
-                  onClick={() => setSelectedCategory(category.id)}
-                  className={`p-3 rounded-xl border transition-all ${selectedCategory === category.id
-                    ? 'bg-blue-500 text-white border-blue-500'
-                    : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300'
-                    }`}
-                >
-                  <div className="flex flex-col items-center gap-1.5">
-                    <CategoryIcon iconName={category.icon} className={selectedCategory === category.id ? 'text-white' : 'text-gray-600'} />
-                    <span className="text-xs font-medium">{category.name}</span>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
+      {/* Edit Transaction Modal */}
+      {/* Transaction Detail Modal */}
+      <TransactionDetailModal
+        isOpen={viewingTransaction !== null}
+        onClose={() => setViewingTransaction(null)}
+        transaction={viewingTransaction ? transactions.find(t => t.id === viewingTransaction.id) || viewingTransaction : null}
+        ledgerName={viewingTransaction ? ledgers.find(l => l.id === viewingTransaction.ledgerId)?.name : undefined}
+        strategyName={viewingTransaction && 'strategyId' in viewingTransaction ? strategies.find(s => s.id === (viewingTransaction as any).strategyId)?.name : undefined}
+        onEdit={(tx) => {
+          // Keep detail view open (don't setViewingTransaction(null))
+          setEditingTransaction(tx);
+        }}
+        onDelete={(tx) => {
+          setViewingTransaction(null);
+          setConfirmDelete({
+            id: tx.id,
+            symbol: (tx as any).ticker || (tx as any).category || 'Unknown'
+          });
+        }}
+      />
 
-          {/* 金額輸入 */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              金額
-            </label>
-            <input
-              type="number"
-              step="0.01"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              placeholder="0.00"
-              className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none transition-colors"
-              required
-            />
-          </div>
-
-          {/* 日期選擇 */}
-          <div>
-            <label className="block text-sm font-medium text gray-700 mb-2">
-              日期
-            </label>
-            <DatePicker
-              selected={selectedDate}
-              onChange={(date: Date | null) => setSelectedDate(date || new Date())}
-              dateFormat="yyyy/MM/dd"
-              className="date-picker-input"
-              calendarClassName="dark-calendar"
-              placeholderText="選擇日期"
-              showPopperArrow={false}
-              required
-            />
-          </div>
-
-          {/* 備註輸入 */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              備註（選填）
-            </label>
-            <input
-              type="text"
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              placeholder="例如：午餐、薪資..."
-              className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none transition-colors"
-            />
-          </div>
-
-          {/* 提交按鈕 */}
-          <button
-            type="submit"
-            className="w-full bg-blue-500 text-white py-3 rounded-xl font-semibold hover:bg-blue-600 transition-colors"
-          >
-            新增交易
-          </button>
-        </form>
-      </Modal>
+      {/* Edit Transaction Modal (Placed AFTER DetailModal to show on top) */}
+      <TradingForm
+        isOpen={isFormOpen || editingTransaction !== null}
+        onClose={() => {
+          setIsFormOpen(false);
+          setEditingTransaction(null);
+        }}
+        editTransaction={editingTransaction as any}
+      />
     </div>
   );
 }

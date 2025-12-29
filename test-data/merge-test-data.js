@@ -1,0 +1,122 @@
+// 將以下代碼貼到瀏覽器的 Console 中執行
+// 這個腳本會【合併】測試資料到現有資料，不會覆蓋你的交易記錄
+
+const testTransactions = [
+    { "id": "test-t1", "ledgerId": "test-ledger-1", "strategyId": "strategy-1", "type": "long", "direction": "long", "symbol": "BTC", "quantity": 0.5, "entryPrice": 42000, "exitPrice": 43500, "pnl": 750, "date": "2025-01-15T10:30:00.000Z", "createdAt": "2025-01-15T10:30:00.000Z" },
+    { "id": "test-t2", "ledgerId": "test-ledger-1", "strategyId": "strategy-1", "type": "long", "direction": "long", "symbol": "ETH", "quantity": 5, "entryPrice": 2200, "exitPrice": 2350, "pnl": 750, "date": "2025-01-22T14:15:00.000Z", "createdAt": "2025-01-22T14:15:00.000Z" },
+    { "id": "test-t3", "ledgerId": "test-ledger-1", "strategyId": "strategy-2", "type": "short", "direction": "short", "symbol": "BTC", "quantity": 0.3, "entryPrice": 44000, "exitPrice": 45500, "pnl": -450, "date": "2025-02-05T09:00:00.000Z", "createdAt": "2025-02-05T09:00:00.000Z" },
+    { "id": "test-t4", "ledgerId": "test-ledger-1", "strategyId": "strategy-1", "type": "long", "direction": "long", "symbol": "SOL", "quantity": 50, "entryPrice": 95, "exitPrice": 110, "pnl": 750, "date": "2025-02-12T11:45:00.000Z", "createdAt": "2025-02-12T11:45:00.000Z" },
+    { "id": "test-t5", "ledgerId": "test-ledger-1", "strategyId": "strategy-2", "type": "long", "direction": "long", "symbol": "AVAX", "quantity": 30, "entryPrice": 35, "exitPrice": 32, "pnl": -90, "date": "2025-02-20T16:30:00.000Z", "createdAt": "2025-02-20T16:30:00.000Z" },
+    { "id": "test-t6", "ledgerId": "test-ledger-1", "strategyId": "strategy-1", "type": "long", "direction": "long", "symbol": "BTC", "quantity": 0.4, "entryPrice": 51000, "exitPrice": 54000, "pnl": 1200, "date": "2025-03-01T08:20:00.000Z", "createdAt": "2025-03-01T08:20:00.000Z" },
+    { "id": "test-t7", "ledgerId": "test-ledger-1", "strategyId": "strategy-1", "type": "long", "direction": "long", "symbol": "ETH", "quantity": 3, "entryPrice": 3200, "exitPrice": 3500, "pnl": 900, "date": "2025-03-08T13:10:00.000Z", "createdAt": "2025-03-08T13:10:00.000Z" },
+    { "id": "test-t8", "ledgerId": "test-ledger-1", "strategyId": "strategy-2", "type": "short", "direction": "short", "symbol": "SOL", "quantity": 40, "entryPrice": 180, "exitPrice": 165, "pnl": 600, "date": "2025-03-15T10:00:00.000Z", "createdAt": "2025-03-15T10:00:00.000Z" },
+    { "id": "test-t9", "ledgerId": "test-ledger-1", "strategyId": "strategy-1", "type": "long", "direction": "long", "symbol": "BTC", "quantity": 0.2, "entryPrice": 65000, "exitPrice": 62000, "pnl": -600, "date": "2025-03-25T15:45:00.000Z", "createdAt": "2025-03-25T15:45:00.000Z" },
+    { "id": "test-t10", "ledgerId": "test-ledger-1", "strategyId": "strategy-2", "type": "long", "direction": "long", "symbol": "LINK", "quantity": 100, "entryPrice": 18, "exitPrice": 21, "pnl": 300, "date": "2025-04-02T09:30:00.000Z", "createdAt": "2025-04-02T09:30:00.000Z" },
+    { "id": "test-t11", "ledgerId": "test-ledger-1", "strategyId": "strategy-1", "type": "long", "direction": "long", "symbol": "ETH", "quantity": 2, "entryPrice": 3100, "exitPrice": 3400, "pnl": 600, "date": "2025-04-10T14:00:00.000Z", "createdAt": "2025-04-10T14:00:00.000Z" },
+    { "id": "test-t12", "ledgerId": "test-ledger-1", "strategyId": "strategy-2", "type": "short", "direction": "short", "symbol": "BTC", "quantity": 0.15, "entryPrice": 70000, "exitPrice": 68000, "pnl": 300, "date": "2025-04-18T11:20:00.000Z", "createdAt": "2025-04-18T11:20:00.000Z" },
+    { "id": "test-t13", "ledgerId": "test-ledger-1", "strategyId": "strategy-1", "type": "long", "direction": "long", "symbol": "SOL", "quantity": 25, "entryPrice": 140, "exitPrice": 155, "pnl": 375, "date": "2025-04-25T16:15:00.000Z", "createdAt": "2025-04-25T16:15:00.000Z" },
+    { "id": "test-t14", "ledgerId": "test-ledger-1", "strategyId": "strategy-2", "type": "long", "direction": "long", "symbol": "AVAX", "quantity": 50, "entryPrice": 38, "exitPrice": 35, "pnl": -150, "date": "2025-05-03T10:45:00.000Z", "createdAt": "2025-05-03T10:45:00.000Z" },
+    { "id": "test-t15", "ledgerId": "test-ledger-1", "strategyId": "strategy-1", "type": "long", "direction": "long", "symbol": "BTC", "quantity": 0.25, "entryPrice": 58000, "exitPrice": 62500, "pnl": 1125, "date": "2025-05-12T08:00:00.000Z", "createdAt": "2025-05-12T08:00:00.000Z" },
+    { "id": "test-t16", "ledgerId": "test-ledger-1", "strategyId": "strategy-1", "type": "long", "direction": "long", "symbol": "ETH", "quantity": 4, "entryPrice": 2900, "exitPrice": 3150, "pnl": 1000, "date": "2025-05-20T13:30:00.000Z", "createdAt": "2025-05-20T13:30:00.000Z" },
+    { "id": "test-t17", "ledgerId": "test-ledger-1", "strategyId": "strategy-2", "type": "short", "direction": "short", "symbol": "SOL", "quantity": 30, "entryPrice": 165, "exitPrice": 170, "pnl": -150, "date": "2025-05-28T15:00:00.000Z", "createdAt": "2025-05-28T15:00:00.000Z" },
+    { "id": "test-t18", "ledgerId": "test-ledger-1", "strategyId": "strategy-1", "type": "long", "direction": "long", "symbol": "BTC", "quantity": 0.3, "entryPrice": 67000, "exitPrice": 70500, "pnl": 1050, "date": "2025-06-05T09:45:00.000Z", "createdAt": "2025-06-05T09:45:00.000Z" },
+    { "id": "test-t19", "ledgerId": "test-ledger-1", "strategyId": "strategy-2", "type": "long", "direction": "long", "symbol": "LINK", "quantity": 80, "entryPrice": 15, "exitPrice": 17.5, "pnl": 200, "date": "2025-06-12T14:20:00.000Z", "createdAt": "2025-06-12T14:20:00.000Z" },
+    { "id": "test-t20", "ledgerId": "test-ledger-1", "strategyId": "strategy-1", "type": "long", "direction": "long", "symbol": "ETH", "quantity": 2.5, "entryPrice": 3500, "exitPrice": 3350, "pnl": -375, "date": "2025-06-20T11:00:00.000Z", "createdAt": "2025-06-20T11:00:00.000Z" },
+    { "id": "test-t21", "ledgerId": "test-ledger-1", "strategyId": "strategy-2", "type": "short", "direction": "short", "symbol": "BTC", "quantity": 0.2, "entryPrice": 64000, "exitPrice": 61000, "pnl": 600, "date": "2025-06-28T16:30:00.000Z", "createdAt": "2025-06-28T16:30:00.000Z" },
+    { "id": "test-t22", "ledgerId": "test-ledger-1", "strategyId": "strategy-1", "type": "long", "direction": "long", "symbol": "SOL", "quantity": 35, "entryPrice": 130, "exitPrice": 145, "pnl": 525, "date": "2025-07-05T10:15:00.000Z", "createdAt": "2025-07-05T10:15:00.000Z" },
+    { "id": "test-t23", "ledgerId": "test-ledger-1", "strategyId": "strategy-1", "type": "long", "direction": "long", "symbol": "BTC", "quantity": 0.35, "entryPrice": 57000, "exitPrice": 60000, "pnl": 1050, "date": "2025-07-15T08:45:00.000Z", "createdAt": "2025-07-15T08:45:00.000Z" },
+    { "id": "test-t24", "ledgerId": "test-ledger-1", "strategyId": "strategy-2", "type": "long", "direction": "long", "symbol": "AVAX", "quantity": 40, "entryPrice": 28, "exitPrice": 32, "pnl": 160, "date": "2025-07-22T13:00:00.000Z", "createdAt": "2025-07-22T13:00:00.000Z" },
+    { "id": "test-t25", "ledgerId": "test-ledger-1", "strategyId": "strategy-1", "type": "long", "direction": "long", "symbol": "ETH", "quantity": 3, "entryPrice": 3200, "exitPrice": 3450, "pnl": 750, "date": "2025-07-30T15:30:00.000Z", "createdAt": "2025-07-30T15:30:00.000Z" },
+    { "id": "test-t26", "ledgerId": "test-ledger-1", "strategyId": "strategy-2", "type": "short", "direction": "short", "symbol": "SOL", "quantity": 25, "entryPrice": 175, "exitPrice": 180, "pnl": -125, "date": "2025-08-08T09:00:00.000Z", "createdAt": "2025-08-08T09:00:00.000Z" },
+    { "id": "test-t27", "ledgerId": "test-ledger-1", "strategyId": "strategy-1", "type": "long", "direction": "long", "symbol": "BTC", "quantity": 0.2, "entryPrice": 55000, "exitPrice": 58500, "pnl": 700, "date": "2025-08-15T11:45:00.000Z", "createdAt": "2025-08-15T11:45:00.000Z" },
+    { "id": "test-t28", "ledgerId": "test-ledger-1", "strategyId": "strategy-1", "type": "long", "direction": "long", "symbol": "LINK", "quantity": 120, "entryPrice": 12, "exitPrice": 14.5, "pnl": 300, "date": "2025-08-22T14:15:00.000Z", "createdAt": "2025-08-22T14:15:00.000Z" },
+    { "id": "test-t29", "ledgerId": "test-ledger-1", "strategyId": "strategy-2", "type": "long", "direction": "long", "symbol": "ETH", "quantity": 2, "entryPrice": 2600, "exitPrice": 2450, "pnl": -300, "date": "2025-08-30T10:30:00.000Z", "createdAt": "2025-08-30T10:30:00.000Z" },
+    { "id": "test-t30", "ledgerId": "test-ledger-1", "strategyId": "strategy-1", "type": "long", "direction": "long", "symbol": "BTC", "quantity": 0.25, "entryPrice": 58000, "exitPrice": 62000, "pnl": 1000, "date": "2025-09-06T08:00:00.000Z", "createdAt": "2025-09-06T08:00:00.000Z" },
+    { "id": "test-t31", "ledgerId": "test-ledger-1", "strategyId": "strategy-2", "type": "short", "direction": "short", "symbol": "SOL", "quantity": 30, "entryPrice": 140, "exitPrice": 135, "pnl": 150, "date": "2025-09-12T13:45:00.000Z", "createdAt": "2025-09-12T13:45:00.000Z" },
+    { "id": "test-t32", "ledgerId": "test-ledger-1", "strategyId": "strategy-1", "type": "long", "direction": "long", "symbol": "AVAX", "quantity": 60, "entryPrice": 25, "exitPrice": 28, "pnl": 180, "date": "2025-09-20T16:00:00.000Z", "createdAt": "2025-09-20T16:00:00.000Z" },
+    { "id": "test-t33", "ledgerId": "test-ledger-1", "strategyId": "strategy-1", "type": "long", "direction": "long", "symbol": "ETH", "quantity": 3.5, "entryPrice": 2400, "exitPrice": 2600, "pnl": 700, "date": "2025-09-28T09:30:00.000Z", "createdAt": "2025-09-28T09:30:00.000Z" },
+    { "id": "test-t34", "ledgerId": "test-ledger-1", "strategyId": "strategy-2", "type": "long", "direction": "long", "symbol": "BTC", "quantity": 0.15, "entryPrice": 64000, "exitPrice": 61000, "pnl": -450, "date": "2025-10-05T11:15:00.000Z", "createdAt": "2025-10-05T11:15:00.000Z" },
+    { "id": "test-t35", "ledgerId": "test-ledger-1", "strategyId": "strategy-1", "type": "long", "direction": "long", "symbol": "SOL", "quantity": 40, "entryPrice": 145, "exitPrice": 160, "pnl": 600, "date": "2025-10-12T14:45:00.000Z", "createdAt": "2025-10-12T14:45:00.000Z" },
+    { "id": "test-t36", "ledgerId": "test-ledger-1", "strategyId": "strategy-2", "type": "short", "direction": "short", "symbol": "LINK", "quantity": 100, "entryPrice": 14, "exitPrice": 12.5, "pnl": 150, "date": "2025-10-20T10:00:00.000Z", "createdAt": "2025-10-20T10:00:00.000Z" },
+    { "id": "test-t37", "ledgerId": "test-ledger-1", "strategyId": "strategy-1", "type": "long", "direction": "long", "symbol": "BTC", "quantity": 0.3, "entryPrice": 68000, "exitPrice": 72000, "pnl": 1200, "date": "2025-10-28T08:30:00.000Z", "createdAt": "2025-10-28T08:30:00.000Z" },
+    { "id": "test-t38", "ledgerId": "test-ledger-1", "strategyId": "strategy-1", "type": "long", "direction": "long", "symbol": "ETH", "quantity": 4, "entryPrice": 2550, "exitPrice": 2750, "pnl": 800, "date": "2025-11-05T13:20:00.000Z", "createdAt": "2025-11-05T13:20:00.000Z" },
+    { "id": "test-t39", "ledgerId": "test-ledger-1", "strategyId": "strategy-2", "type": "long", "direction": "long", "symbol": "AVAX", "quantity": 45, "entryPrice": 30, "exitPrice": 28, "pnl": -90, "date": "2025-11-12T15:50:00.000Z", "createdAt": "2025-11-12T15:50:00.000Z" },
+    { "id": "test-t40", "ledgerId": "test-ledger-1", "strategyId": "strategy-1", "type": "long", "direction": "long", "symbol": "BTC", "quantity": 0.4, "entryPrice": 75000, "exitPrice": 80000, "pnl": 2000, "date": "2025-11-20T09:15:00.000Z", "createdAt": "2025-11-20T09:15:00.000Z" },
+    { "id": "test-t41", "ledgerId": "test-ledger-1", "strategyId": "strategy-2", "type": "short", "direction": "short", "symbol": "SOL", "quantity": 35, "entryPrice": 240, "exitPrice": 225, "pnl": 525, "date": "2025-11-28T11:40:00.000Z", "createdAt": "2025-11-28T11:40:00.000Z" },
+    { "id": "test-t42", "ledgerId": "test-ledger-1", "strategyId": "strategy-1", "type": "long", "direction": "long", "symbol": "ETH", "quantity": 3, "entryPrice": 3600, "exitPrice": 3850, "pnl": 750, "date": "2025-12-03T14:00:00.000Z", "createdAt": "2025-12-03T14:00:00.000Z" },
+    { "id": "test-t43", "ledgerId": "test-ledger-1", "strategyId": "strategy-1", "type": "long", "direction": "long", "symbol": "BTC", "quantity": 0.25, "entryPrice": 95000, "exitPrice": 98000, "pnl": 750, "date": "2025-12-08T10:30:00.000Z", "createdAt": "2025-12-08T10:30:00.000Z" },
+    { "id": "test-t44", "ledgerId": "test-ledger-1", "strategyId": "strategy-2", "type": "long", "direction": "long", "symbol": "LINK", "quantity": 80, "entryPrice": 22, "exitPrice": 20, "pnl": -160, "date": "2025-12-12T16:20:00.000Z", "createdAt": "2025-12-12T16:20:00.000Z" },
+    { "id": "test-t45", "ledgerId": "test-ledger-1", "strategyId": "strategy-1", "type": "long", "direction": "long", "symbol": "SOL", "quantity": 20, "entryPrice": 210, "exitPrice": 230, "pnl": 400, "date": "2025-12-15T08:45:00.000Z", "createdAt": "2025-12-15T08:45:00.000Z" },
+    { "id": "test-t46", "ledgerId": "test-ledger-1", "strategyId": "strategy-2", "type": "short", "direction": "short", "symbol": "BTC", "quantity": 0.1, "entryPrice": 102000, "exitPrice": 98000, "pnl": 400, "date": "2025-12-18T13:10:00.000Z", "createdAt": "2025-12-18T13:10:00.000Z" },
+    { "id": "test-t47", "ledgerId": "test-ledger-1", "strategyId": "strategy-1", "type": "long", "direction": "long", "symbol": "ETH", "quantity": 2.5, "entryPrice": 3900, "exitPrice": 4100, "pnl": 500, "date": "2025-12-20T15:30:00.000Z", "createdAt": "2025-12-20T15:30:00.000Z" },
+    { "id": "test-t48", "ledgerId": "test-ledger-1", "strategyId": "strategy-1", "type": "long", "direction": "long", "symbol": "AVAX", "quantity": 50, "entryPrice": 48, "exitPrice": 52, "pnl": 200, "date": "2025-12-22T09:00:00.000Z", "createdAt": "2025-12-22T09:00:00.000Z" },
+    { "id": "test-t49", "ledgerId": "test-ledger-1", "strategyId": "strategy-2", "type": "long", "direction": "long", "symbol": "BTC", "quantity": 0.2, "entryPrice": 96000, "exitPrice": 93000, "pnl": -600, "date": "2025-12-25T11:25:00.000Z", "createdAt": "2025-12-25T11:25:00.000Z" },
+    { "id": "test-t50", "ledgerId": "test-ledger-1", "strategyId": "strategy-1", "type": "long", "direction": "long", "symbol": "SOL", "quantity": 25, "entryPrice": 195, "exitPrice": 210, "pnl": 375, "date": "2025-12-28T14:50:00.000Z", "createdAt": "2025-12-28T14:50:00.000Z" }
+];
+
+const testLedger = {
+    "id": "test-ledger-1",
+    "name": "Test Trading Account",
+    "assetType": "crypto",
+    "initialBalance": 10000,
+    "icon": "📊",
+    "color": "#10b981",
+    "createdAt": "2025-01-01T00:00:00.000Z"
+};
+
+const testStrategies = [
+    {
+        "id": "strategy-1",
+        "name": "Trend Following",
+        "description": "Follow the market trend",
+        "color": "#3b82f6",
+        "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+        "id": "strategy-2",
+        "name": "Mean Reversion",
+        "description": "Trade reversals",
+        "color": "#f59e0b",
+        "createdAt": "2025-01-01T00:00:00.000Z"
+    }
+];
+
+// 讀取現有資料
+const existingDataStr = localStorage.getItem('expense-tracker-data');
+let existingData = existingDataStr ? JSON.parse(existingDataStr) : {
+    transactions: [],
+    ledgers: [],
+    strategies: [],
+    categories: [],
+    settings: { currency: 'USD', locale: 'en' }
+};
+
+// 檢查是否已有測試帳本
+const hasTestLedger = existingData.ledgers?.some(l => l.id === 'test-ledger-1');
+if (!hasTestLedger) {
+    existingData.ledgers = [...(existingData.ledgers || []), testLedger];
+}
+
+// 合併策略（避免重複）
+testStrategies.forEach(strategy => {
+    const exists = existingData.strategies?.some(s => s.id === strategy.id);
+    if (!exists) {
+        existingData.strategies = [...(existingData.strategies || []), strategy];
+    }
+});
+
+// 合併交易（避免重複）
+testTransactions.forEach(tx => {
+    const exists = existingData.transactions?.some(t => t.id === tx.id);
+    if (!exists) {
+        existingData.transactions = [...(existingData.transactions || []), tx];
+    }
+});
+
+// 儲存合併後的資料
+localStorage.setItem('expense-tracker-data', JSON.stringify(existingData));
+
+console.log('✅ 測試資料已【合併】到現有資料！');
+console.log(`📊 新增 ${testTransactions.length} 筆交易（2025年）`);
+console.log(`📁 現有交易總數: ${existingData.transactions.length} 筆`);
+console.log('🔄 請刷新頁面查看圖表');
