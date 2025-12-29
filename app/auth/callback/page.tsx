@@ -12,6 +12,16 @@ function AuthCallbackContent() {
 
     useEffect(() => {
         const handleCallback = async () => {
+            const supabase = createClient();
+
+            // 首先檢查用戶是否已經登入（驗證可能已經完成）
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session) {
+                setStatus('驗證成功！正在跳轉...');
+                router.push('/dashboard');
+                return;
+            }
+
             const code = searchParams.get('code');
             const errorParam = searchParams.get('error');
             const errorDescription = searchParams.get('error_description');
@@ -24,6 +34,7 @@ function AuthCallbackContent() {
             }
 
             if (!code) {
+                // 沒有 code 也沒有 session，可能連結有問題
                 setError('缺少驗證碼');
                 setStatus('驗證失敗');
                 setTimeout(() => router.push('/login?error=no_code'), 3000);
@@ -32,10 +43,17 @@ function AuthCallbackContent() {
 
             try {
                 setStatus('正在處理驗證...');
-                const supabase = createClient();
                 const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
 
                 if (exchangeError) {
+                    // 再次檢查是否已登入（可能在此期間完成）
+                    const { data: { session: retrySession } } = await supabase.auth.getSession();
+                    if (retrySession) {
+                        setStatus('驗證成功！正在跳轉...');
+                        router.push('/dashboard');
+                        return;
+                    }
+
                     setError(exchangeError.message);
                     setStatus('驗證失敗');
                     setTimeout(() => router.push('/login?error=' + encodeURIComponent(exchangeError.message)), 3000);
