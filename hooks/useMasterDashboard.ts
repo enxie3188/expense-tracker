@@ -34,11 +34,11 @@ export function useMasterDashboard(
 
         // 如果指定了 ledgerId，進一步篩選
         if (ledgerId && ledgerId !== 'all') {
-            filtered = filtered.filter((t) => t.ledgerId === ledgerId);
+            filtered = filtered.filter((t) => 'ledgerId' in t && t.ledgerId === ledgerId);
         }
 
-        // Type assertion after filtering
-        return filtered as TradingTransaction[];
+        // Type assertion after filtering (use unknown as intermediate)
+        return filtered as unknown as TradingTransaction[];
     }, [transactions, ledgerId]);
 
     // Debug: 輸出交易資料
