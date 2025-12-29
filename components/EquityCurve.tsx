@@ -2,7 +2,8 @@
 
 import React, { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
-const Plot = dynamic(() => import('react-plotly.js'), { ssr: false });
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const Plot = dynamic(() => import('react-plotly.js'), { ssr: false }) as any;
 import { EquityPoint } from '@/types/ledger';
 
 interface EquityCurveProps {
