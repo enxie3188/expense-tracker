@@ -1,6 +1,6 @@
 {
-    "name": "Trading Journal",
-    "short_name": "Trading",
+    "name": "AlphaLog",
+    "short_name": "AlphaLog",
     "description": "專業多資產交易日誌系統",
     "start_url": "/dashboard",
     "display": "standalone",
