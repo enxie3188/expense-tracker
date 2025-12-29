@@ -7,15 +7,15 @@ import { Transaction } from '@/types';
 export function createLedger(
     name: string,
     assetType: Ledger['assetType'],
-    currency: string = 'USD',
-    icon: string = 'Wallet',
-    color: string = 'blue'
+    initialBalance: number = 0,
+    icon: string = '📊',
+    color: string = '#3B82F6'
 ): Ledger {
     return {
         id: crypto.randomUUID(),
         name,
         assetType,
-        currency,
+        initialBalance,
         icon,
         color,
         createdAt: new Date().toISOString(),
