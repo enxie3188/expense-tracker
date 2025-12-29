@@ -8,7 +8,7 @@ import { EquityPoint } from '@/types/ledger';
 export function calculateWinRate(transactions: TradingTransaction[]): number {
     if (transactions.length === 0) return 0;
 
-    const winningTrades = transactions.filter(t => t.pnl > 0).length;
+    const winningTrades = transactions.filter(t => (t.pnl ?? 0) > 0).length;
     return (winningTrades / transactions.length) * 100;
 }
 
@@ -18,13 +18,13 @@ export function calculateWinRate(transactions: TradingTransaction[]): number {
  */
 export function calculateProfitFactor(transactions: TradingTransaction[]): number {
     const totalProfit = transactions
-        .filter(t => t.pnl > 0)
-        .reduce((sum, t) => sum + t.pnl, 0);
+        .filter(t => (t.pnl ?? 0) > 0)
+        .reduce((sum, t) => sum + (t.pnl ?? 0), 0);
 
     const totalLoss = Math.abs(
         transactions
-            .filter(t => t.pnl < 0)
-            .reduce((sum, t) => sum + t.pnl, 0)
+            .filter(t => (t.pnl ?? 0) < 0)
+            .reduce((sum, t) => sum + (t.pnl ?? 0), 0)
     );
 
     if (totalLoss === 0) return totalProfit > 0 ? Infinity : 0;
@@ -39,19 +39,19 @@ export function calculateAveragePnL(transactions: TradingTransaction[]): {
     avgLoss: number;
     avgTrade: number;
 } {
-    const winningTrades = transactions.filter(t => t.pnl > 0);
-    const losingTrades = transactions.filter(t => t.pnl < 0);
+    const winningTrades = transactions.filter(t => (t.pnl ?? 0) > 0);
+    const losingTrades = transactions.filter(t => (t.pnl ?? 0) < 0);
 
     const avgWin = winningTrades.length > 0
-        ? winningTrades.reduce((sum, t) => sum + t.pnl, 0) / winningTrades.length
+        ? winningTrades.reduce((sum, t) => sum + (t.pnl ?? 0), 0) / winningTrades.length
         : 0;
 
     const avgLoss = losingTrades.length > 0
-        ? losingTrades.reduce((sum, t) => sum + t.pnl, 0) / losingTrades.length
+        ? losingTrades.reduce((sum, t) => sum + (t.pnl ?? 0), 0) / losingTrades.length
         : 0;
 
     const avgTrade = transactions.length > 0
-        ? transactions.reduce((sum, t) => sum + t.pnl, 0) / transactions.length
+        ? transactions.reduce((sum, t) => sum + (t.pnl ?? 0), 0) / transactions.length
         : 0;
 
     return { avgWin, avgLoss, avgTrade };
@@ -191,9 +191,10 @@ export function calculateConsecutiveLosses(transactions: TradingTransaction[]): 
     );
 
     for (const transaction of sortedTransactions) {
-        if (transaction.pnl < 0) {
+        const pnl = transaction.pnl ?? 0;
+        if (pnl < 0) {
             tempStreak++;
-            tempStreakAmount += transaction.pnl;
+            tempStreakAmount += pnl;
 
             if (tempStreak > maxConsecutiveLosses) {
                 maxConsecutiveLosses = tempStreak;
@@ -209,7 +210,7 @@ export function calculateConsecutiveLosses(transactions: TradingTransaction[]): 
 
     // 檢查最後的連續虧損
     const lastTransaction = sortedTransactions[sortedTransactions.length - 1];
-    if (lastTransaction && lastTransaction.pnl < 0) {
+    if (lastTransaction && (lastTransaction.pnl ?? 0) < 0) {
         currentStreak = tempStreak;
         currentStreakAmount = tempStreakAmount;
     }
@@ -227,9 +228,9 @@ export function calculateConsecutiveLosses(transactions: TradingTransaction[]): 
  */
 export function calculateMaxSingleWin(transactions: TradingTransaction[]): number {
     if (transactions.length === 0) return 0;
-    const wins = transactions.filter(t => t.pnl > 0);
+    const wins = transactions.filter(t => (t.pnl ?? 0) > 0);
     if (wins.length === 0) return 0;
-    return Math.max(...wins.map(t => t.pnl));
+    return Math.max(...wins.map(t => t.pnl ?? 0));
 }
 
 /**
@@ -257,9 +258,10 @@ export function calculateConsecutiveWins(transactions: TradingTransaction[]): {
     );
 
     for (const transaction of sortedTransactions) {
-        if (transaction.pnl > 0) {
+        const pnl = transaction.pnl ?? 0;
+        if (pnl > 0) {
             tempStreak++;
-            tempStreakAmount += transaction.pnl;
+            tempStreakAmount += pnl;
 
             if (tempStreak > maxConsecutiveWins) {
                 maxConsecutiveWins = tempStreak;
@@ -294,10 +296,10 @@ export function calculateAllMetrics(
     const consecutiveWins = calculateConsecutiveWins(transactions);
     const maxSingleWin = calculateMaxSingleWin(transactions);
 
-    const totalPnL = transactions.reduce((sum, t) => sum + t.pnl, 0);
+    const totalPnL = transactions.reduce((sum, t) => sum + (t.pnl ?? 0), 0);
     const totalTrades = transactions.length;
-    const winningTrades = transactions.filter(t => t.pnl > 0).length;
-    const losingTrades = transactions.filter(t => t.pnl < 0).length;
+    const winningTrades = transactions.filter(t => (t.pnl ?? 0) > 0).length;
+    const losingTrades = transactions.filter(t => (t.pnl ?? 0) < 0).length;
 
     return {
         // 基本統計
