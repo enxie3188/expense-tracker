@@ -76,16 +76,26 @@ export default function DashboardPage() {
 
         switch (timeRange) {
             case '1D':
-                cutoffDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+                // 今天的開始（00:00:00）
+                cutoffDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
                 break;
             case '1W':
-                cutoffDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                // 7 天前的開始
+                const weekAgo = new Date(now);
+                weekAgo.setDate(weekAgo.getDate() - 7);
+                cutoffDate = new Date(weekAgo.getFullYear(), weekAgo.getMonth(), weekAgo.getDate(), 0, 0, 0, 0);
                 break;
             case '1M':
-                cutoffDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+                // 30 天前的開始
+                const monthAgo = new Date(now);
+                monthAgo.setDate(monthAgo.getDate() - 30);
+                cutoffDate = new Date(monthAgo.getFullYear(), monthAgo.getMonth(), monthAgo.getDate(), 0, 0, 0, 0);
                 break;
             case '1Y':
-                cutoffDate = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+                // 365 天前的開始
+                const yearAgo = new Date(now);
+                yearAgo.setDate(yearAgo.getDate() - 365);
+                cutoffDate = new Date(yearAgo.getFullYear(), yearAgo.getMonth(), yearAgo.getDate(), 0, 0, 0, 0);
                 break;
         }
 
@@ -94,9 +104,11 @@ export default function DashboardPage() {
             // 1. 篩選帳本 (如果有選)
             if (selectedLedgerId && t.ledgerId !== selectedLedgerId) return false;
 
-            // 2. 篩選時間
+            // 2. 篩選時間 - 使用交易日期（不是 exitDate）
             if (cutoffDate) {
-                const txDate = new Date(t.date);
+                const txDateStr = t.date;
+                const txDate = new Date(txDateStr);
+                // 確保比較的是本地時間
                 if (txDate < cutoffDate) return false;
             }
 
