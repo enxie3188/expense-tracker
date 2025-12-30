@@ -10,6 +10,7 @@ import { useState, useEffect } from "react";
 import { SettingsProvider } from "@/hooks/useSettings";
 import { usePathname } from "next/navigation";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { FinanceProvider } from "@/contexts/FinanceContext";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -46,7 +47,9 @@ export default function RootLayout({
       >
         <AuthProvider>
           <SettingsProvider>
-            <LayoutContent>{children}</LayoutContent>
+            <FinanceProvider>
+              <LayoutContent>{children}</LayoutContent>
+            </FinanceProvider>
           </SettingsProvider>
         </AuthProvider>
       </body>
