@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -12,6 +13,13 @@ interface ModalProps {
 }
 
 export function Modal({ isOpen, onClose, title, children }: ModalProps) {
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+        return () => setMounted(false);
+    }, []);
+
     // 防止背景滾動
     useEffect(() => {
         if (isOpen) {
@@ -24,7 +32,9 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
         };
     }, [isOpen]);
 
-    return (
+    if (!mounted) return null;
+
+    return createPortal(
         <AnimatePresence>
             {isOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -69,5 +79,5 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
                 </div>
             )}
         </AnimatePresence>
-    );
+        , document.body);
 }

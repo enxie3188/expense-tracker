@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Upload, FileSpreadsheet, AlertCircle, CheckCircle } from 'lucide-react';
 import { parseCSV, autoDetectMapping, convertCSVToTransactions, ColumnMapping, CSVData } from '@/lib/csvParser';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -77,7 +78,15 @@ export function CSVImportModal({ isOpen, onClose, onImport, ledgerId }: CSVImpor
         onClose();
     };
 
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+        return () => setMounted(false);
+    }, []);
+
     if (!isOpen) return null;
+    if (!mounted) return null;
 
     const fieldLabels: Record<keyof ColumnMapping, string> = {
         date: '日期 *',
@@ -89,7 +98,7 @@ export function CSVImportModal({ isOpen, onClose, onImport, ledgerId }: CSVImpor
         pnl: '盈虧 *',
     };
 
-    return (
+    return createPortal(
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <div className="bg-[var(--bg-secondary)] rounded-xl border border-[var(--border-subtle)] w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
                 {/* Header */}
@@ -285,5 +294,5 @@ export function CSVImportModal({ isOpen, onClose, onImport, ledgerId }: CSVImpor
                 </div>
             </div>
         </div>
-    );
+        , document.body);
 }

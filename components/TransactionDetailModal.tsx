@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Pencil, Trash2, Calendar, Wallet, FileText, Tag, TrendingUp, TrendingDown } from 'lucide-react';
 import { Transaction, TradingTransaction } from '@/types';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -37,7 +38,15 @@ export function TransactionDetailModal({
     const { t, lang } = useTranslation();
     const [previewImage, setPreviewImage] = useState<string | null>(null);
 
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+        return () => setMounted(false);
+    }, []);
+
     if (!isOpen || !transaction) return null;
+    if (!mounted) return null;
 
     const isTrading = isTradingTransaction(transaction);
     const dateObj = new Date(transaction.date);
@@ -65,7 +74,7 @@ export function TransactionDetailModal({
         amountDisplay = formatCurrency(tx.amount);
     }
 
-    return (
+    return createPortal(
         <AnimatePresence>
             {isOpen && transaction && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -260,7 +269,7 @@ export function TransactionDetailModal({
                 </div>
             )}
         </AnimatePresence>
-    );
+        , document.body);
 }
 
 function DetailRow({ label, value, icon, valueColor = 'text-[var(--text-primary)]' }: { label: string, value: string, icon?: React.ReactNode, valueColor?: string }) {
