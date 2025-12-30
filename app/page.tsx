@@ -34,7 +34,7 @@ DateSelectButton.displayName = 'DateSelectButton';
 export default function TransactionsPage() {
   const { settings } = useSettings();
   const { t, lang } = useTranslation();
-  const { ledgers, transactions, strategies, deleteTransaction } = useFinance();
+  const { ledgers, transactions, strategies, deleteTransaction, updateTransaction } = useFinance();
   const [selectedLedgerId, setSelectedLedgerId] = useState<string>('all');
   const [confirmDelete, setConfirmDelete] = useState<{ id: string; symbol: string } | null>(null);
   const [expandedTxId, setExpandedTxId] = useState<string | null>(null);
@@ -487,6 +487,9 @@ export default function TransactionsPage() {
             id: tx.id,
             symbol: (tx as any).ticker || (tx as any).category || 'Unknown'
           });
+        }}
+        onUpdateImages={(txId, newImages) => {
+          updateTransaction(txId, { images: newImages } as any);
         }}
       />
 

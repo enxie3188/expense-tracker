@@ -13,6 +13,7 @@ interface TransactionDetailModalProps {
     transaction: Transaction | TradingTransaction | null;
     onEdit: (transaction: Transaction | TradingTransaction) => void;
     onDelete: (transaction: Transaction | TradingTransaction) => void;
+    onUpdateImages?: (transactionId: string, newImages: string[]) => void;
     ledgerName?: string;
     strategyName?: string;
 }
@@ -28,6 +29,7 @@ export function TransactionDetailModal({
     transaction,
     onEdit,
     onDelete,
+    onUpdateImages,
     ledgerName,
     strategyName
 }: TransactionDetailModalProps) {
@@ -153,14 +155,29 @@ export function TransactionDetailModal({
                                 </div>
                                 <div className="flex flex-wrap gap-2">
                                     {(transaction as any).images.map((img: string, i: number) => (
-                                        <div key={i} className="relative w-24 h-24 rounded-lg overflow-hidden border border-[var(--border-default)] cursor-pointer hover:opacity-90 transition-opacity">
+                                        <div key={i} className="relative group w-24 h-24 rounded-lg overflow-hidden border border-[var(--border-default)]">
                                             {/* eslint-disable-next-line @next/next/no-img-element */}
                                             <img
                                                 src={img}
                                                 alt={`Img ${i}`}
-                                                className="w-full h-full object-cover"
+                                                className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
                                                 onClick={() => setPreviewImage(img)}
                                             />
+                                            {/* Delete button - visible on hover */}
+                                            {onUpdateImages && (
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        const newImages = (transaction as any).images.filter((_: string, idx: number) => idx !== i);
+                                                        onUpdateImages(transaction.id, newImages);
+                                                    }}
+                                                    className="absolute top-1 right-1 p-1.5 bg-red-500/90 hover:bg-red-600 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                                                    title="刪除附件"
+                                                >
+                                                    <X size={12} />
+                                                </button>
+                                            )}
                                         </div>
                                     ))}
                                 </div>
