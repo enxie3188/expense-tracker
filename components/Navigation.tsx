@@ -16,8 +16,8 @@ export function Navigation({ onAddClick }: NavigationProps) {
     const isActive = (path: string) => pathname === path;
 
     return (
-        <nav className="lg:hidden fixed bottom-0 left-0 lg:left-64 right-0 bg-[var(--bg-secondary)] border-t border-[var(--border-subtle)] safe-area-pb z-30">
-            <div className="max-w-7xl mx-auto px-4 lg:px-6 py-3">
+        <nav className="lg:hidden fixed bottom-0 left-0 lg:left-64 right-0 bg-[var(--bg-secondary)] border-t border-[var(--border-subtle)] z-30 pb-1">
+            <div className="max-w-7xl mx-auto px-4 lg:px-6 py-2">
                 <div className="flex items-center justify-around">
                     <Link
                         href="/dashboard"
