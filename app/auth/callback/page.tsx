@@ -4,6 +4,35 @@ import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
 
+/**
+ * 將詳細的錯誤訊息轉換為通用的使用者友善訊息
+ * 避免洩漏系統內部資訊
+ */
+function sanitizeErrorMessage(error: string | null): string {
+    if (!error) return '驗證失敗，請重試';
+
+    // 記錄詳細錯誤到 console（僅開發環境）
+    if (process.env.NODE_ENV === 'development') {
+        console.error('Auth error:', error);
+    }
+
+    // 返回通用錯誤訊息
+    const errorLower = error.toLowerCase();
+
+    if (errorLower.includes('email') || errorLower.includes('verification')) {
+        return '電子郵件驗證失敗，請檢查您的信箱';
+    }
+    if (errorLower.includes('code') || errorLower.includes('invalid')) {
+        return '驗證碼無效或已過期';
+    }
+    if (errorLower.includes('network') || errorLower.includes('timeout')) {
+        return '網路連線問題，請重試';
+    }
+
+    // 預設通用訊息
+    return '登入驗證失敗，請重新嘗試';
+}
+
 function AuthCallbackContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -27,17 +56,19 @@ function AuthCallbackContent() {
             const errorDescription = searchParams.get('error_description');
 
             if (errorParam) {
-                setError(errorDescription || errorParam);
+                const sanitizedError = sanitizeErrorMessage(errorDescription || errorParam);
+                setError(sanitizedError);
                 setStatus('驗證失敗');
-                setTimeout(() => router.push('/login?error=' + encodeURIComponent(errorDescription || errorParam)), 3000);
+                setTimeout(() => router.push('/login?error=' + encodeURIComponent(sanitizedError)), 3000);
                 return;
             }
 
             if (!code) {
                 // 沒有 code 也沒有 session，可能連結有問題
-                setError('缺少驗證碼');
+                const sanitizedError = sanitizeErrorMessage('no_code');
+                setError(sanitizedError);
                 setStatus('驗證失敗');
-                setTimeout(() => router.push('/login?error=no_code'), 3000);
+                setTimeout(() => router.push('/login?error=' + encodeURIComponent(sanitizedError)), 3000);
                 return;
             }
 
@@ -54,9 +85,10 @@ function AuthCallbackContent() {
                         return;
                     }
 
-                    setError(exchangeError.message);
+                    const sanitizedError = sanitizeErrorMessage(exchangeError.message);
+                    setError(sanitizedError);
                     setStatus('驗證失敗');
-                    setTimeout(() => router.push('/login?error=' + encodeURIComponent(exchangeError.message)), 3000);
+                    setTimeout(() => router.push('/login?error=' + encodeURIComponent(sanitizedError)), 3000);
                     return;
                 }
 

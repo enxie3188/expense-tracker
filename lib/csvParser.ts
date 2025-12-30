@@ -4,6 +4,7 @@
  */
 
 import { TradingTransaction } from '@/types/ledger';
+import { sanitizeText, sanitizeNumber } from './sanitize';
 
 export interface CSVColumn {
     index: number;
@@ -66,6 +67,7 @@ export interface ColumnMapping {
 
 /**
  * 將 CSV 資料轉換為交易記錄
+ * 包含 XSS 防護 - 所有文字輸入都會被清理
  */
 export function convertCSVToTransactions(
     csvData: CSVData,
@@ -81,31 +83,30 @@ export function convertCSVToTransactions(
             const date = parseDate(dateStr);
             if (!date) continue;
 
-            // 解析標的
-            const symbol = row[mapping.symbol]?.trim() || 'Unknown';
+            // 解析標的 - 使用 sanitizeText 防止 XSS
+            const symbol = sanitizeText(row[mapping.symbol]) || 'Unknown';
 
             // 解析方向
             let direction: 'long' | 'short' = 'long';
             if (mapping.direction >= 0 && row[mapping.direction]) {
-                const dirStr = row[mapping.direction].toLowerCase().trim();
+                const dirStr = sanitizeText(row[mapping.direction]).toLowerCase();
                 if (dirStr.includes('short') || dirStr.includes('賣') || dirStr.includes('空')) {
                     direction = 'short';
                 }
             }
 
-            // 解析盈虧
-            const pnlStr = row[mapping.pnl]?.replace(/[,$]/g, '') || '0';
-            const pnl = parseFloat(pnlStr) || 0;
+            // 解析盈虧 - 使用 sanitizeNumber
+            const pnl = sanitizeNumber(row[mapping.pnl]);
 
-            // 解析其他欄位
+            // 解析其他欄位 - 使用 sanitizeNumber
             const entryPrice = mapping.entryPrice >= 0
-                ? parseFloat(row[mapping.entryPrice]?.replace(/[,$]/g, '') || '0')
+                ? sanitizeNumber(row[mapping.entryPrice])
                 : undefined;
             const exitPrice = mapping.exitPrice >= 0
-                ? parseFloat(row[mapping.exitPrice]?.replace(/[,$]/g, '') || '0')
+                ? sanitizeNumber(row[mapping.exitPrice])
                 : undefined;
             const quantity = mapping.quantity >= 0
-                ? parseFloat(row[mapping.quantity]?.replace(/[,$]/g, '') || '0')
+                ? sanitizeNumber(row[mapping.quantity])
                 : undefined;
 
             const transaction: TradingTransaction = {
