@@ -127,7 +127,7 @@ export default function TransactionsPage() {
 
   return (
     <div className="min-h-screen bg-[var(--bg-primary)] pb-24 lg:pb-8 w-full">
-      <div className="px-4 lg:px-8 py-8 pt-16 lg:pt-8 max-w-7xl mx-auto">
+      <div className="px-4 lg:px-8 py-8 pt-16 lg:pt-8 max-w-full mx-auto">
         {/* Header */}
         <div className="mb-6 relative">
           <h1 className="text-3xl font-bold mb-2">{t.transactions.title}</h1>
