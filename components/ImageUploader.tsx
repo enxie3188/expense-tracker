@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { Camera, X, ImageIcon, Loader2 } from 'lucide-react';
+import { Camera, X, Loader2 } from 'lucide-react';
 import { compressImage } from '@/lib/imageUtils';
 
 interface ImageUploaderProps {
@@ -12,6 +12,7 @@ interface ImageUploaderProps {
 
 export function ImageUploader({ images, onImagesChange, maxImages = 3 }: ImageUploaderProps) {
     const [isCompressing, setIsCompressing] = useState(false);
+    const [previewImage, setPreviewImage] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -76,7 +77,7 @@ export function ImageUploader({ images, onImagesChange, maxImages = 3 }: ImageUp
                 </div>
             </div>
 
-            {/* Thumbnail Grip */}
+            {/* Thumbnail Grid */}
             {images.length > 0 && (
                 <div className="flex flex-wrap gap-2">
                     {images.map((img, index) => (
@@ -87,13 +88,7 @@ export function ImageUploader({ images, onImagesChange, maxImages = 3 }: ImageUp
                                     src={img}
                                     alt={`Attachment ${index + 1}`}
                                     className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
-                                    onClick={() => {
-                                        // Open preview (simple implementation: open in new tab)
-                                        const win = window.open();
-                                        if (win) {
-                                            win.document.write(`<img src="${img}" style="max-width:100%; height:auto;">`);
-                                        }
-                                    }}
+                                    onClick={() => setPreviewImage(img)}
                                 />
                             </div>
                             <button
@@ -105,6 +100,42 @@ export function ImageUploader({ images, onImagesChange, maxImages = 3 }: ImageUp
                             </button>
                         </div>
                     ))}
+                </div>
+            )}
+
+            {/* Image Preview Modal */}
+            {previewImage && (
+                <div
+                    className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm"
+                    onClick={() => setPreviewImage(null)}
+                >
+                    {/* Close Button */}
+                    <button
+                        type="button"
+                        onClick={() => setPreviewImage(null)}
+                        className="absolute top-4 right-4 p-3 bg-black/50 hover:bg-black/70 rounded-full text-white transition-colors z-10"
+                        aria-label="關閉"
+                    >
+                        <X size={24} />
+                    </button>
+
+                    {/* Image Container */}
+                    <div
+                        className="relative max-w-[90vw] max-h-[85vh] flex items-center justify-center p-4"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                            src={previewImage}
+                            alt="Preview"
+                            className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl"
+                        />
+                    </div>
+
+                    {/* Tap hint for mobile */}
+                    <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-white/60 text-sm">
+                        點擊任意處關閉
+                    </div>
                 </div>
             )}
         </div>

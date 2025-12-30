@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { X, Pencil, Trash2, Calendar, Wallet, FileText, Tag, TrendingUp, TrendingDown } from 'lucide-react';
 import { Transaction, TradingTransaction } from '@/types';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -31,6 +32,7 @@ export function TransactionDetailModal({
     strategyName
 }: TransactionDetailModalProps) {
     const { t, lang } = useTranslation();
+    const [previewImage, setPreviewImage] = useState<string | null>(null);
 
     if (!isOpen || !transaction) return null;
 
@@ -157,10 +159,7 @@ export function TransactionDetailModal({
                                                 src={img}
                                                 alt={`Img ${i}`}
                                                 className="w-full h-full object-cover"
-                                                onClick={() => {
-                                                    const win = window.open();
-                                                    win?.document.write(`<img src="${img}" style="max-width:100%">`);
-                                                }}
+                                                onClick={() => setPreviewImage(img)}
                                             />
                                         </div>
                                     ))}
@@ -188,6 +187,42 @@ export function TransactionDetailModal({
                     </button>
                 </div>
             </div>
+
+            {/* Image Preview Lightbox */}
+            {previewImage && (
+                <div
+                    className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm"
+                    onClick={() => setPreviewImage(null)}
+                >
+                    {/* Close Button */}
+                    <button
+                        type="button"
+                        onClick={() => setPreviewImage(null)}
+                        className="absolute top-4 right-4 p-3 bg-black/50 hover:bg-black/70 rounded-full text-white transition-colors z-10"
+                        aria-label="關閉"
+                    >
+                        <X size={24} />
+                    </button>
+
+                    {/* Image Container */}
+                    <div
+                        className="relative max-w-[90vw] max-h-[85vh] flex items-center justify-center p-4"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                            src={previewImage}
+                            alt="Preview"
+                            className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl"
+                        />
+                    </div>
+
+                    {/* Tap hint for mobile */}
+                    <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-white/60 text-sm">
+                        點擊任意處關閉
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
