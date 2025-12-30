@@ -95,7 +95,7 @@ export function TradingForm({ isOpen, onClose, editTransaction }: TradingFormPro
         }
     }, [editTransaction, isOpen]);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
         if (!ledgerId) {
@@ -138,17 +138,21 @@ export function TradingForm({ isOpen, onClose, editTransaction }: TradingFormPro
             images,
         };
 
-        if (editTransaction) {
-            // 編輯模式：更新現有交易
-            updateTransaction(editTransaction.id, transactionData as any);
-        } else {
-            // 新增模式
-            addTransaction(transactionData as any);
-        }
+        try {
+            if (editTransaction) {
+                // 編輯模式：更新現有交易
+                await updateTransaction(editTransaction.id, transactionData as any);
+            } else {
+                // 新增模式
+                await addTransaction(transactionData as any);
+            }
 
-        // 重置表單
-        resetForm();
-        onClose();
+            // 重置表單
+            resetForm();
+            onClose();
+        } catch (error) {
+            console.error('Failed to save transaction:', error);
+        }
     };
 
     const resetForm = () => {
