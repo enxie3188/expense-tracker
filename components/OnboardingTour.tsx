@@ -28,7 +28,7 @@ const TOUR_STEPS: TourStep[] = [
     {
         id: 'transaction',
         title: '記錄交易',
-        description: '點擊底部的「+」按鈕來記錄新的交易。包含買入價、賣出價、數量等資訊，系統會自動計算盈虧。',
+        description: '在電腦版點擊右上角的「+新增交易」按鈕，或在手機版點擊底部的「+」按鈕來記錄新的交易。包含買入價、賣出價、數量等資訊，系統會自動計算盈虧。',
         icon: <Plus className="w-8 h-8" />,
         highlight: '[data-tour="add-button"]',
     },
@@ -113,112 +113,112 @@ export function OnboardingTour({ onComplete }: OnboardingTourProps) {
                 onClick={handleSkip}
             />
 
-            {/* Modal */}
-            <div
-                className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-[90vw] max-w-md animate-scale-in"
-            >
-                <div
-                    className="rounded-2xl overflow-hidden"
-                    style={{
-                        backgroundColor: 'var(--bg-card)',
-                        border: '1px solid var(--border-subtle)',
-                        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
-                    }}
-                >
-                    {/* Header */}
+            {/* Modal Container - using flexbox for proper centering */}
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+                <div className="w-full max-w-md pointer-events-auto animate-fade-in">
                     <div
-                        className="px-6 py-4 flex items-center justify-between"
-                        style={{ borderBottom: '1px solid var(--border-subtle)' }}
+                        className="rounded-2xl overflow-hidden"
+                        style={{
+                            backgroundColor: 'var(--bg-card)',
+                            border: '1px solid var(--border-subtle)',
+                            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+                        }}
                     >
-                        <div className="flex items-center gap-2">
-                            {TOUR_STEPS.map((_, index) => (
-                                <div
-                                    key={index}
-                                    className="w-2 h-2 rounded-full transition-all"
-                                    style={{
-                                        backgroundColor: index === currentStep
-                                            ? 'var(--neon-blue)'
-                                            : index < currentStep
-                                                ? 'var(--neon-cyan)'
-                                                : 'var(--bg-hover)',
-                                    }}
-                                />
-                            ))}
-                        </div>
-                        <button
-                            onClick={handleSkip}
-                            className="p-1 rounded-lg transition-colors hover:bg-[var(--bg-hover)]"
-                            style={{ color: 'var(--text-muted)' }}
-                        >
-                            <X className="w-5 h-5" />
-                        </button>
-                    </div>
-
-                    {/* Content */}
-                    <div className="p-8 text-center">
-                        {/* Icon */}
+                        {/* Header */}
                         <div
-                            className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6"
-                            style={{
-                                background: 'linear-gradient(135deg, var(--neon-blue), var(--neon-cyan))',
-                                color: 'white',
-                            }}
+                            className="px-6 py-4 flex items-center justify-between"
+                            style={{ borderBottom: '1px solid var(--border-subtle)' }}
                         >
-                            {step.icon}
-                        </div>
-
-                        {/* Title */}
-                        <h2
-                            className="text-xl font-bold mb-4"
-                            style={{ color: 'var(--text-primary)' }}
-                        >
-                            {step.title}
-                        </h2>
-
-                        {/* Description */}
-                        <p
-                            className="leading-relaxed"
-                            style={{ color: 'var(--text-secondary)' }}
-                        >
-                            {step.description}
-                        </p>
-                    </div>
-
-                    {/* Footer */}
-                    <div
-                        className="px-6 py-4 flex items-center justify-between"
-                        style={{ borderTop: '1px solid var(--border-subtle)' }}
-                    >
-                        {isFirstStep ? (
+                            <div className="flex items-center gap-2">
+                                {TOUR_STEPS.map((_, index) => (
+                                    <div
+                                        key={index}
+                                        className="w-2 h-2 rounded-full transition-all"
+                                        style={{
+                                            backgroundColor: index === currentStep
+                                                ? 'var(--neon-blue)'
+                                                : index < currentStep
+                                                    ? 'var(--neon-cyan)'
+                                                    : 'var(--bg-hover)',
+                                        }}
+                                    />
+                                ))}
+                            </div>
                             <button
                                 onClick={handleSkip}
-                                className="px-4 py-2 text-sm transition-colors"
+                                className="p-1 rounded-lg transition-colors hover:bg-[var(--bg-hover)]"
                                 style={{ color: 'var(--text-muted)' }}
                             >
-                                跳過導覽
+                                <X className="w-5 h-5" />
                             </button>
-                        ) : (
-                            <button
-                                onClick={handlePrev}
-                                className="px-4 py-2 text-sm flex items-center gap-1 transition-colors"
+                        </div>
+
+                        {/* Content */}
+                        <div className="p-8 text-center">
+                            {/* Icon */}
+                            <div
+                                className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6"
+                                style={{
+                                    background: 'linear-gradient(135deg, var(--neon-blue), var(--neon-cyan))',
+                                    color: 'white',
+                                }}
+                            >
+                                {step.icon}
+                            </div>
+
+                            {/* Title */}
+                            <h2
+                                className="text-xl font-bold mb-4"
+                                style={{ color: 'var(--text-primary)' }}
+                            >
+                                {step.title}
+                            </h2>
+
+                            {/* Description */}
+                            <p
+                                className="leading-relaxed"
                                 style={{ color: 'var(--text-secondary)' }}
                             >
-                                <ChevronLeft className="w-4 h-4" />
-                                上一步
-                            </button>
-                        )}
+                                {step.description}
+                            </p>
+                        </div>
 
-                        <button
-                            onClick={handleNext}
-                            className="px-6 py-2 rounded-xl font-medium flex items-center gap-1 transition-all hover:scale-105"
-                            style={{
-                                background: 'linear-gradient(135deg, var(--neon-blue), var(--neon-cyan))',
-                                color: 'white',
-                            }}
+                        {/* Footer */}
+                        <div
+                            className="px-6 py-4 flex items-center justify-between"
+                            style={{ borderTop: '1px solid var(--border-subtle)' }}
                         >
-                            {isLastStep ? '開始使用' : '下一步'}
-                            {!isLastStep && <ChevronRight className="w-4 h-4" />}
-                        </button>
+                            {isFirstStep ? (
+                                <button
+                                    onClick={handleSkip}
+                                    className="px-4 py-2 text-sm transition-colors"
+                                    style={{ color: 'var(--text-muted)' }}
+                                >
+                                    跳過導覽
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={handlePrev}
+                                    className="px-4 py-2 text-sm flex items-center gap-1 transition-colors"
+                                    style={{ color: 'var(--text-secondary)' }}
+                                >
+                                    <ChevronLeft className="w-4 h-4" />
+                                    上一步
+                                </button>
+                            )}
+
+                            <button
+                                onClick={handleNext}
+                                className="px-6 py-2 rounded-xl font-medium flex items-center gap-1 transition-all hover:scale-105"
+                                style={{
+                                    background: 'linear-gradient(135deg, var(--neon-blue), var(--neon-cyan))',
+                                    color: 'white',
+                                }}
+                            >
+                                {isLastStep ? '開始使用' : '下一步'}
+                                {!isLastStep && <ChevronRight className="w-4 h-4" />}
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
