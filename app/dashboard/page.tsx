@@ -7,12 +7,16 @@ import { TrendingUp, TrendingDown, Wallet, Activity, Plus } from 'lucide-react';
 import { useFinance } from '@/hooks/useFinance';
 import { useSettings } from '@/hooks/useSettings';
 import { useTranslation } from '@/hooks/useTranslation';
+import { OnboardingTour } from '@/components/OnboardingTour';
+import { NoLedgerState, NoTransactionState } from '@/components/EmptyState';
+import { useRouter } from 'next/navigation';
 
 export default function DashboardPage() {
     const { settings, isLoaded } = useSettings();
     const { t } = useTranslation();
+    const router = useRouter();
     const [timeRange, setTimeRange] = useState<TimeRange>(settings.chart.defaultTimeRange);
-    const { ledgers, transactions } = useFinance();
+    const { ledgers, transactions, isLoading: financeLoading } = useFinance();
     const [selectedLedgerId, setSelectedLedgerId] = useState<string>('');
     const [mounted, setMounted] = useState(false);
 
@@ -118,8 +122,31 @@ export default function DashboardPage() {
 
     if (!mounted) return null;
 
+    // 導航到設定頁面創建帳本
+    const handleCreateLedger = () => {
+        router.push('/settings');
+    };
+
+    // 沒有帳本時顯示空狀態
+    if (!financeLoading && ledgers.length === 0) {
+        return (
+            <div className="min-h-screen bg-[var(--bg-primary)] pb-24 lg:pb-8 w-full">
+                <OnboardingTour />
+                <div className="max-w-full mx-auto px-4 lg:px-8 py-8 pt-16 lg:pt-8">
+                    <div className="mb-6">
+                        <h1 className="text-4xl font-bold mb-2">{t.dashboard.title}</h1>
+                    </div>
+                    <div className="card-dark p-8">
+                        <NoLedgerState onCreateLedger={handleCreateLedger} />
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="min-h-screen bg-[var(--bg-primary)] pb-24 lg:pb-8 w-full">
+            <OnboardingTour />
             <div className="max-w-full mx-auto px-4 lg:px-8 py-8 pt-16 lg:pt-8">
                 {/* Header */}
                 <div className="mb-6 relative">

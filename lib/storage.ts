@@ -17,9 +17,7 @@ const DEFAULT_DATA: AppData = {
         ...cat,
         id: `default-${index}`,
     })),
-    ledgers: [
-        createLedger('我的帳本', 'other', 0, '📊', '#3B82F6'),
-    ],
+    ledgers: [], // 新用戶不自動創建帳本
     strategies: [],
     settings: {
         currency: 'NT$',
@@ -66,11 +64,14 @@ export function loadFromStorage(): AppData {
  * 遷移舊資料格式至新 schema
  */
 function migrateData(data: Partial<AppData>): AppData {
-    // 檢查是否為舊格式（沒有 ledgers 欄位）
-    if (!data.ledgers || data.ledgers.length === 0) {
-        console.log('Migrating old data format to new schema...');
+    // 檢查是否為舊格式（沒有 ledgers 欄位但有交易記錄）
+    const hasOldTransactions = (data.transactions || []).length > 0;
+    const hasNoLedgers = !data.ledgers || data.ledgers.length === 0;
 
-        // 建立預設帳本
+    if (hasNoLedgers && hasOldTransactions) {
+        console.log('Migrating old data format with transactions to new schema...');
+
+        // 只在有舊交易時才建立預設帳本
         const defaultLedger = createLedger('我的帳本', 'other', 0, '📊', '#3B82F6');
 
         // 將所有舊交易歸屬至預設帳本
@@ -88,8 +89,14 @@ function migrateData(data: Partial<AppData>): AppData {
         };
     }
 
-    // 已是新格式，直接返回
-    return data as AppData;
+    // 新用戶或已是新格式，直接返回
+    return {
+        transactions: data.transactions || [],
+        categories: data.categories || DEFAULT_DATA.categories,
+        ledgers: data.ledgers || [],
+        strategies: data.strategies || [],
+        settings: data.settings || DEFAULT_DATA.settings,
+    };
 }
 
 /**
