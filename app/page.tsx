@@ -4,7 +4,7 @@ import { TransactionDetailModal } from '@/components/TransactionDetailModal';
 import { useFinance } from '@/hooks/useFinance';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useMemo, useState, forwardRef } from 'react';
-import { TrendingUp, TrendingDown, Calendar, Trash2, ChevronDown, Plus, Pencil, ImageIcon } from 'lucide-react';
+import { TrendingUp, TrendingDown, Calendar, Trash2, ChevronDown, Plus, Pencil, ImageIcon, X } from 'lucide-react';
 import { format, isSameMonth } from 'date-fns';
 import { zhTW, enUS } from 'date-fns/locale';
 import { TradingForm } from '@/components/TradingForm';
@@ -42,6 +42,7 @@ export default function TransactionsPage() {
   const [viewingTransaction, setViewingTransaction] = useState<Transaction | TradingTransaction | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState<Date>(new Date());
+  const [previewImage, setPreviewImage] = useState<{ src: string; txId: string; index: number } | null>(null);
 
   // 篩選 (Ledger + Month)
   const filteredTransactions = useMemo(() => {
@@ -426,12 +427,7 @@ export default function TransactionsPage() {
                                           src={img}
                                           alt={`Attachment ${i}`}
                                           className="w-full h-full object-cover"
-                                          onClick={() => {
-                                            const win = window.open();
-                                            if (win) {
-                                              win.document.write(`<img src="${img}" style="max-width:100%; height:auto;">`);
-                                            }
-                                          }}
+                                          onClick={() => setPreviewImage({ src: img, txId: tx.id, index: i })}
                                         />
                                       </div>
                                     ))}
@@ -502,6 +498,57 @@ export default function TransactionsPage() {
         }}
         editTransaction={editingTransaction as any}
       />
+
+      {/* Image Preview Lightbox */}
+      {previewImage && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm"
+          onClick={() => setPreviewImage(null)}
+        >
+          {/* Close Button */}
+          <button
+            type="button"
+            onClick={() => setPreviewImage(null)}
+            className="absolute top-4 right-4 p-3 bg-black/50 hover:bg-black/70 rounded-full text-white transition-colors z-10"
+            aria-label="Close"
+          >
+            <X size={24} />
+          </button>
+
+          {/* Delete Button */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              const tx = transactions.find(t => t.id === previewImage.txId);
+              if (tx && (tx as any).images) {
+                const newImages = (tx as any).images.filter((_: string, idx: number) => idx !== previewImage.index);
+                updateTransaction(previewImage.txId, { images: newImages } as any);
+              }
+              setPreviewImage(null);
+            }}
+            className="absolute top-4 left-4 p-3 bg-red-500/80 hover:bg-red-600 rounded-full text-white transition-colors z-10"
+            aria-label="Delete"
+          >
+            <Trash2 size={24} />
+          </button>
+
+          <div
+            className="relative max-w-[90vw] max-h-[85vh] flex items-center justify-center p-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={previewImage.src}
+              alt="Preview"
+              className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl"
+            />
+          </div>
+          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-white/60 text-sm">
+            點擊任意處關閉
+          </div>
+        </div>
+      )}
     </div>
   );
 }
