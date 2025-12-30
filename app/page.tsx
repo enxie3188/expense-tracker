@@ -3,7 +3,8 @@
 import { TransactionDetailModal } from '@/components/TransactionDetailModal';
 import { useFinance } from '@/hooks/useFinance';
 import { useTranslation } from '@/hooks/useTranslation';
-import { useMemo, useState, forwardRef } from 'react';
+import { useMemo, useState, forwardRef, useRef, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { TrendingUp, TrendingDown, Calendar, Trash2, ChevronDown, Plus, Pencil, ImageIcon, X } from 'lucide-react';
 import { format, isSameMonth } from 'date-fns';
 import { zhTW, enUS } from 'date-fns/locale';
@@ -149,36 +150,13 @@ export default function TransactionsPage() {
           </button>
         </div>
 
-        {/* Ledger Tabs */}
-        <div className="mb-6 border-b border-[var(--border-default)]">
-          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-            <button
-              onClick={() => setSelectedLedgerId('all')}
-              className={`px-4 py-2 rounded-t-lg text-sm font-medium transition-colors whitespace-nowrap ${selectedLedgerId === 'all'
-                ? 'bg-[var(--neon-blue)] text-white'
-                : 'text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]'
-                }`}
-            >
-              {t.analytics.allLedgers}
-            </button>
-            {ledgers.map((ledger) => (
-              <button
-                key={ledger.id}
-                onClick={() => setSelectedLedgerId(ledger.id)}
-                className={`px-4 py-2 rounded-t-lg text-sm font-medium transition-colors whitespace-nowrap flex items-center gap-2 ${selectedLedgerId === ledger.id
-                  ? 'bg-[var(--neon-blue)] text-white'
-                  : 'text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]'
-                  }`}
-              >
-                <div
-                  className="w-2 h-2 rounded-full"
-                  style={{ backgroundColor: ledger.color }}
-                />
-                {ledger.name}
-              </button>
-            ))}
-          </div>
-        </div>
+        {/* Ledger Tabs with Sliding Indicator */}
+        <LedgerTabs
+          ledgers={ledgers}
+          selectedLedgerId={selectedLedgerId}
+          onSelect={setSelectedLedgerId}
+          allLabel={t.analytics.allLedgers}
+        />
 
         {/* Transaction Count & Date Filter */}
         <div className="mb-4 flex items-center justify-between relative">
@@ -549,6 +527,86 @@ export default function TransactionsPage() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+// Ledger Tabs with Sliding Indicator
+interface LedgerTabsProps {
+  ledgers: { id: string; name: string; color: string }[];
+  selectedLedgerId: string;
+  onSelect: (id: string) => void;
+  allLabel: string;
+}
+
+function LedgerTabs({ ledgers, selectedLedgerId, onSelect, allLabel }: LedgerTabsProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0 });
+
+  // All tabs including "all"
+  const allTabs = [{ id: 'all', name: allLabel, color: '' }, ...ledgers];
+
+  // Update indicator position
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const activeIndex = allTabs.findIndex(t => t.id === selectedLedgerId);
+    if (activeIndex === -1) return;
+
+    const buttons = container.querySelectorAll('[data-tab]');
+    const activeButton = buttons[activeIndex] as HTMLElement;
+
+    if (activeButton) {
+      const containerRect = container.getBoundingClientRect();
+      const buttonRect = activeButton.getBoundingClientRect();
+
+      setIndicatorStyle({
+        left: buttonRect.left - containerRect.left,
+        width: buttonRect.width,
+      });
+    }
+  }, [selectedLedgerId, ledgers]);
+
+  return (
+    <div className="mb-6 border-b border-[var(--border-default)]">
+      <div ref={containerRef} className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide relative">
+        {/* Sliding Indicator */}
+        <motion.div
+          className="absolute bottom-0 h-0.5 bg-[var(--neon-blue)] rounded-full"
+          initial={false}
+          animate={{
+            left: indicatorStyle.left,
+            width: indicatorStyle.width,
+          }}
+          transition={{
+            type: 'spring',
+            stiffness: 400,
+            damping: 30,
+          }}
+          style={{ boxShadow: '0 0 8px var(--neon-blue-glow)' }}
+        />
+
+        {allTabs.map((tab) => (
+          <button
+            key={tab.id}
+            data-tab
+            onClick={() => onSelect(tab.id)}
+            className={`px-4 py-2 rounded-t-lg text-sm font-medium transition-colors whitespace-nowrap flex items-center gap-2 ${selectedLedgerId === tab.id
+                ? 'text-[var(--neon-blue)]'
+                : 'text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]'
+              }`}
+          >
+            {tab.color && (
+              <div
+                className="w-2 h-2 rounded-full"
+                style={{ backgroundColor: tab.color }}
+              />
+            )}
+            {tab.name}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }

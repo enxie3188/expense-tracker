@@ -85,6 +85,31 @@ body {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
+/* Custom Scrollbar - Match Background */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-default);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-default) var(--bg-primary);
+}
+
 /* Prevent iOS Safari auto-zoom on input focus */
 input,
 select,
@@ -175,6 +200,45 @@ textarea {
   border-color: var(--text-primary) !important;
 }
 
+/* Month Picker Grid - 3 columns x 4 rows (One Quarter per Row) */
+.month-grid-fix .react-datepicker__month {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 8px !important;
+  padding: 8px !important;
+}
+
+.month-grid-fix .react-datepicker__month-wrapper {
+  display: contents !important;
+}
+
+.month-grid-fix .react-datepicker__month-text {
+  display: inline-block !important;
+  width: auto !important;
+  padding: 8px 12px !important;
+  margin: 2px !important;
+  border-radius: 8px !important;
+  font-size: 14px !important;
+  color: var(--text-primary) !important;
+  background-color: transparent !important;
+  transition: background-color 0.15s ease !important;
+}
+
+.month-grid-fix .react-datepicker__month-text:hover {
+  background-color: var(--bg-hover) !important;
+}
+
+.month-grid-fix .react-datepicker__month-text--keyboard-selected,
+.month-grid-fix .react-datepicker__month-text--selected {
+  background-color: var(--neon-blue) !important;
+  color: white !important;
+}
+
+.month-grid-fix .react-datepicker__month-container {
+  width: auto !important;
+  min-width: 280px !important;
+}
+
 /* Mobile Safe Area Utilities */
 .safe-area-pb {
   padding-bottom: env(safe-area-inset-bottom);
@@ -213,4 +277,21 @@ textarea {
 
 .animate-scale-in {
   animation: scaleIn 0.3s ease-out forwards;
+}
+
+/* Page Transition Animation - Scale + Fade */
+@keyframes pageIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-page-in {
+  animation: pageIn 0.18s ease-out forwards;
 }

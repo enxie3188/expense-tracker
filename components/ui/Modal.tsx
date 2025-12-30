@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { X } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface ModalProps {
     isOpen: boolean;
@@ -23,34 +24,50 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
         };
     }, [isOpen]);
 
-    if (!isOpen) return null;
-
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            {/* Backdrop */}
-            <div
-                className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-                onClick={onClose}
-            />
-
-            {/* Modal Content */}
-            <div className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto bg-[var(--bg-secondary)] border border-[var(--border-default)] rounded-2xl shadow-2xl">
-                {/* Header */}
-                <div className="sticky top-0 z-10 flex items-center justify-between p-6 border-b border-[var(--border-subtle)] bg-[var(--bg-secondary)]">
-                    <h2 className="text-xl font-bold text-[var(--text-primary)]">{title}</h2>
-                    <button
+        <AnimatePresence>
+            {isOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    {/* Backdrop */}
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
                         onClick={onClose}
-                        className="p-2 rounded-lg hover:bg-[var(--bg-hover)] transition-colors text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-                    >
-                        <X size={20} />
-                    </button>
-                </div>
+                    />
 
-                {/* Body */}
-                <div className="p-6">
-                    {children}
+                    {/* Modal Content - Bounce Scale */}
+                    <motion.div
+                        initial={{ scale: 0.5, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0.5, opacity: 0 }}
+                        transition={{
+                            type: 'spring',
+                            damping: 20,
+                            stiffness: 400,
+                        }}
+                        className="relative w-full sm:max-w-lg bg-[var(--bg-secondary)] border border-[var(--border-default)] rounded-2xl shadow-2xl"
+                    >
+                        {/* Header */}
+                        <div className="sticky top-0 z-10 flex items-center justify-between p-6 border-b border-[var(--border-subtle)] bg-[var(--bg-secondary)]">
+                            <h2 className="text-xl font-bold text-[var(--text-primary)]">{title}</h2>
+                            <button
+                                onClick={onClose}
+                                className="p-2 rounded-lg hover:bg-[var(--bg-hover)] transition-colors text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        {/* Body */}
+                        <div className="p-6">
+                            {children}
+                        </div>
+                    </motion.div>
                 </div>
-            </div>
-        </div>
+            )}
+        </AnimatePresence>
     );
 }

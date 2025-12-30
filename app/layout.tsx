@@ -11,6 +11,8 @@ import { SettingsProvider } from "@/hooks/useSettings";
 import { usePathname } from "next/navigation";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { FinanceProvider } from "@/contexts/FinanceContext";
+import { LoadingScreen } from "@/components/motion";
+import { AnimatePresence, motion } from "framer-motion";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -59,6 +61,7 @@ export default function RootLayout({
 
 function LayoutContent({ children }: { children: React.ReactNode }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isFirstLoad, setIsFirstLoad] = useState(true);
   const pathname = usePathname();
 
   const handleAddClick = () => {
@@ -72,6 +75,14 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener('openAddTransaction', handleOpenForm as EventListener);
   }, []);
 
+  // First load completed
+  useEffect(() => {
+    if (isFirstLoad) {
+      const timer = setTimeout(() => setIsFirstLoad(false), 800);
+      return () => clearTimeout(timer);
+    }
+  }, [isFirstLoad]);
+
   // Check if on login page - render without sidebar
   const isAuthPage = pathname === '/login' || pathname?.startsWith('/auth');
 
@@ -80,23 +91,34 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex h-screen relative">
-      <CyberBackground />
-      <Sidebar />
-      <main className="flex-1 overflow-y-auto overflow-x-hidden pb-20 md:pb-0 relative z-10">
-        {children}
-      </main>
+    <>
+      {/* Initial Loading Screen */}
+      {isFirstLoad && <LoadingScreen minDuration={800} />}
 
-      {/* Mobile Navigation */}
-      <div className="md:hidden">
-        <Navigation onAddClick={handleAddClick} />
+      <div className="flex h-screen relative">
+        <CyberBackground />
+        <Sidebar />
+        <main className="flex-1 overflow-y-auto overflow-x-hidden pb-20 md:pb-0 relative z-10">
+          {/* Page Transition Animation using CSS */}
+          <div
+            key={pathname}
+            className="h-full animate-page-in"
+          >
+            {children}
+          </div>
+        </main>
+
+        {/* Mobile Navigation */}
+        <div className="md:hidden">
+          <Navigation onAddClick={handleAddClick} />
+        </div>
+
+        {/* Trading Form Modal */}
+        <TradingForm
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+        />
       </div>
-
-      {/* Trading Form Modal */}
-      <TradingForm
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-      />
-    </div>
+    </>
   );
 }

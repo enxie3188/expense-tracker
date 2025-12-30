@@ -2,6 +2,7 @@
 
 import { ChevronDown } from 'lucide-react';
 import { useState, ReactNode } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface SettingsSectionProps {
     title: string;
@@ -36,19 +37,30 @@ export function SettingsSection({
                         )}
                     </div>
                 </div>
-                <ChevronDown
-                    size={20}
-                    className={`text-[var(--text-muted)] transition-transform ${isExpanded ? 'rotate-180' : ''
-                        }`}
-                />
+                <motion.div
+                    animate={{ rotate: isExpanded ? 180 : 0 }}
+                    transition={{ duration: 0.2 }}
+                >
+                    <ChevronDown size={20} className="text-[var(--text-muted)]" />
+                </motion.div>
             </button>
 
-            {/* Content */}
-            {isExpanded && (
-                <div className="px-6 pb-6 border-t border-[var(--border-subtle)] pt-6">
-                    {children}
-                </div>
-            )}
+            {/* Content with animation */}
+            <AnimatePresence initial={false}>
+                {isExpanded && (
+                    <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.25, ease: 'easeOut' }}
+                        style={{ overflow: 'hidden' }}
+                    >
+                        <div className="px-6 pb-6 border-t border-[var(--border-subtle)] pt-6">
+                            {children}
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }
