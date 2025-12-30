@@ -266,4 +266,53 @@ export const en: Translations = {
         '1Y': '1Y',
         'ALL': 'ALL',
     },
+
+    // Empty State
+    emptyState: {
+        noLedger: {
+            title: 'Welcome to AlphaLog!',
+            description: 'Ready to start your trading journey? Create your first ledger to track all your trades and performance.',
+            action: '✨ Create First Ledger',
+        },
+        noTransaction: {
+            title: 'No Transactions Yet',
+            description: 'Start recording your first trade to see your equity curve and performance analytics.',
+            action: '+ Add Trade',
+        },
+    },
+
+    // Onboarding Tour
+    onboarding: {
+        skip: 'Skip Tour',
+        prev: 'Previous',
+        next: 'Next',
+        start: 'Get Started',
+        steps: {
+            welcome: {
+                title: 'Welcome to AlphaLog!',
+                description: 'This is your personal trading journal. Let\'s quickly learn how to use the features to help you track and analyze your trading performance.',
+            },
+            ledger: {
+                title: 'Create a Ledger',
+                description: 'First, you need to create a ledger. A ledger can represent different trading accounts, such as "US Stocks Account" or "Futures Account". Go to Settings to create your first ledger.',
+            },
+            transaction: {
+                title: 'Record Trades',
+                description: 'On desktop, click the "+ Add Trade" button in the top right corner. On mobile, tap the "+" button at the bottom. Enter entry/exit prices and quantity, and the system will calculate your P&L automatically.',
+            },
+            dashboard: {
+                title: 'Dashboard Overview',
+                description: 'The Dashboard shows your equity curve, total P&L, win rate, and other key metrics. Get a clear view of your trading performance at a glance.',
+            },
+            analytics: {
+                title: 'Performance Analytics',
+                description: 'In the "Analytics" page, you can see detailed statistics including calendar heatmaps, strategy performance comparisons, and more.',
+            },
+            settings: {
+                title: 'Ledger & Strategy Management',
+                description: 'Manage your ledgers and trading strategies in "Settings". You can create multiple ledgers to separate different trading accounts.',
+            },
+        },
+    },
 };
+

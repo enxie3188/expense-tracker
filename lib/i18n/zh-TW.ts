@@ -264,6 +264,55 @@ export const zhTW = {
         '1Y': '1Y',
         'ALL': 'ALL',
     },
+
+    // 空狀態
+    emptyState: {
+        noLedger: {
+            title: '歡迎來到 AlphaLog！',
+            description: '準備開始記錄您的交易旅程嗎？創建第一個帳本，開始追蹤您的每一筆交易和績效。',
+            action: '✨ 創建第一個帳本',
+        },
+        noTransaction: {
+            title: '尚無交易資料',
+            description: '開始記錄您的第一筆交易，查看您的權益曲線和績效分析。',
+            action: '+ 新增交易',
+        },
+    },
+
+    // 新手導覽
+    onboarding: {
+        skip: '跳過導覽',
+        prev: '上一步',
+        next: '下一步',
+        start: '開始使用',
+        steps: {
+            welcome: {
+                title: '歡迎使用 AlphaLog！',
+                description: '這是您的專屬交易日誌系統。讓我們快速了解如何使用各項功能，幫助您追蹤和分析交易績效。',
+            },
+            ledger: {
+                title: '創建帳本',
+                description: '首先，您需要創建一個帳本。帳本可以是不同的交易帳戶，例如「美股帳戶」、「期貨帳戶」等。前往設定頁面創建您的第一個帳本。',
+            },
+            transaction: {
+                title: '記錄交易',
+                description: '在電腦版點擊右上角的「+新增交易」按鈕，或在手機版點擊底部的「+」按鈕來記錄新的交易。包含買入價、賣出價、數量等資訊，系統會自動計算盈虧。',
+            },
+            dashboard: {
+                title: 'Dashboard 總覽',
+                description: 'Dashboard 顯示您的權益曲線、總盈虧、勝率等關鍵指標。一目瞭然掌握交易表現。',
+            },
+            analytics: {
+                title: '績效分析',
+                description: '在「績效分析」頁面，您可以看到更詳細的統計數據，包括月曆熱力圖、策略績效比較等。',
+            },
+            settings: {
+                title: '帳本與策略管理',
+                description: '在「設定」中管理您的帳本和交易策略。您可以創建多個帳本來區分不同的交易帳戶。',
+            },
+        },
+    },
 };
 
 export type Translations = typeof zhTW;
+

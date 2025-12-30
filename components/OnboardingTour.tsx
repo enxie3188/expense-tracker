@@ -2,58 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { X, ChevronRight, ChevronLeft, BookOpen, Plus, BarChart3, Settings, Sparkles } from 'lucide-react';
-
-interface TourStep {
-    id: string;
-    title: string;
-    description: string;
-    icon: React.ReactNode;
-    highlight?: string; // CSS selector to highlight
-}
-
-const TOUR_STEPS: TourStep[] = [
-    {
-        id: 'welcome',
-        title: '歡迎使用 AlphaLog！',
-        description: '這是您的專屬交易日誌系統。讓我們快速了解如何使用各項功能，幫助您追蹤和分析交易績效。',
-        icon: <Sparkles className="w-8 h-8" />,
-    },
-    {
-        id: 'ledger',
-        title: '創建帳本',
-        description: '首先，您需要創建一個帳本。帳本可以是不同的交易帳戶，例如「美股帳戶」、「期貨帳戶」等。前往設定頁面創建您的第一個帳本。',
-        icon: <BookOpen className="w-8 h-8" />,
-        highlight: '[data-tour="settings"]',
-    },
-    {
-        id: 'transaction',
-        title: '記錄交易',
-        description: '在電腦版點擊右上角的「+新增交易」按鈕，或在手機版點擊底部的「+」按鈕來記錄新的交易。包含買入價、賣出價、數量等資訊，系統會自動計算盈虧。',
-        icon: <Plus className="w-8 h-8" />,
-        highlight: '[data-tour="add-button"]',
-    },
-    {
-        id: 'dashboard',
-        title: 'Dashboard 總覽',
-        description: 'Dashboard 顯示您的權益曲線、總盈虧、勝率等關鍵指標。一目瞭然掌握交易表現。',
-        icon: <BarChart3 className="w-8 h-8" />,
-        highlight: '[data-tour="dashboard"]',
-    },
-    {
-        id: 'analytics',
-        title: '績效分析',
-        description: '在「績效分析」頁面，您可以看到更詳細的統計數據，包括月曆熱力圖、策略績效比較等。',
-        icon: <BarChart3 className="w-8 h-8" />,
-        highlight: '[data-tour="analytics"]',
-    },
-    {
-        id: 'settings',
-        title: '帳本與策略管理',
-        description: '在「設定」中管理您的帳本和交易策略。您可以創建多個帳本來區分不同的交易帳戶。',
-        icon: <Settings className="w-8 h-8" />,
-        highlight: '[data-tour="settings"]',
-    },
-];
+import { useTranslation } from '@/hooks/useTranslation';
 
 const ONBOARDING_KEY = 'alphalog_onboarding_completed';
 
@@ -62,8 +11,19 @@ interface OnboardingTourProps {
 }
 
 export function OnboardingTour({ onComplete }: OnboardingTourProps) {
+    const { t } = useTranslation();
     const [isVisible, setIsVisible] = useState(false);
     const [currentStep, setCurrentStep] = useState(0);
+
+    // 使用 i18n 的步驟配置
+    const tourSteps = [
+        { id: 'welcome', icon: <Sparkles className="w-8 h-8" />, ...t.onboarding.steps.welcome },
+        { id: 'ledger', icon: <BookOpen className="w-8 h-8" />, ...t.onboarding.steps.ledger },
+        { id: 'transaction', icon: <Plus className="w-8 h-8" />, ...t.onboarding.steps.transaction },
+        { id: 'dashboard', icon: <BarChart3 className="w-8 h-8" />, ...t.onboarding.steps.dashboard },
+        { id: 'analytics', icon: <BarChart3 className="w-8 h-8" />, ...t.onboarding.steps.analytics },
+        { id: 'settings', icon: <Settings className="w-8 h-8" />, ...t.onboarding.steps.settings },
+    ];
 
     useEffect(() => {
         // 檢查是否已完成教學
@@ -76,7 +36,7 @@ export function OnboardingTour({ onComplete }: OnboardingTourProps) {
     }, []);
 
     const handleNext = () => {
-        if (currentStep < TOUR_STEPS.length - 1) {
+        if (currentStep < tourSteps.length - 1) {
             setCurrentStep(prev => prev + 1);
         } else {
             handleComplete();
@@ -101,9 +61,9 @@ export function OnboardingTour({ onComplete }: OnboardingTourProps) {
 
     if (!isVisible) return null;
 
-    const step = TOUR_STEPS[currentStep];
+    const step = tourSteps[currentStep];
     const isFirstStep = currentStep === 0;
-    const isLastStep = currentStep === TOUR_STEPS.length - 1;
+    const isLastStep = currentStep === tourSteps.length - 1;
 
     return (
         <>
@@ -130,7 +90,7 @@ export function OnboardingTour({ onComplete }: OnboardingTourProps) {
                             style={{ borderBottom: '1px solid var(--border-subtle)' }}
                         >
                             <div className="flex items-center gap-2">
-                                {TOUR_STEPS.map((_, index) => (
+                                {tourSteps.map((_, index) => (
                                     <div
                                         key={index}
                                         className="w-2 h-2 rounded-full transition-all"
@@ -194,7 +154,7 @@ export function OnboardingTour({ onComplete }: OnboardingTourProps) {
                                     className="px-4 py-2 text-sm transition-colors"
                                     style={{ color: 'var(--text-muted)' }}
                                 >
-                                    跳過導覽
+                                    {t.onboarding.skip}
                                 </button>
                             ) : (
                                 <button
@@ -203,7 +163,7 @@ export function OnboardingTour({ onComplete }: OnboardingTourProps) {
                                     style={{ color: 'var(--text-secondary)' }}
                                 >
                                     <ChevronLeft className="w-4 h-4" />
-                                    上一步
+                                    {t.onboarding.prev}
                                 </button>
                             )}
 
@@ -215,7 +175,7 @@ export function OnboardingTour({ onComplete }: OnboardingTourProps) {
                                     color: 'white',
                                 }}
                             >
-                                {isLastStep ? '開始使用' : '下一步'}
+                                {isLastStep ? t.onboarding.start : t.onboarding.next}
                                 {!isLastStep && <ChevronRight className="w-4 h-4" />}
                             </button>
                         </div>
